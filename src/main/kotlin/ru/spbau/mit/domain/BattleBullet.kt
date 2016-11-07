@@ -48,7 +48,7 @@ class BattleBullet : ObjectInstance, MutableState {
                 accelerationX: Double,
                 accelerationY: Double,
                 damage: Double,
-                name: String = "bullet") {
+                name: String) {
         this.x = x
         this.y = y
         this.speedX = speedX

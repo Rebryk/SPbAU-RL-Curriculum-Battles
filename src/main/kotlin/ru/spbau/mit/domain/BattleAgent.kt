@@ -50,7 +50,7 @@ open class BattleAgent : ObjectInstance, MutableState {
         val keys = mutableListOf<Any>(Var.X, Var.Y, Var.ANGLE, Var.HP)
     }
 
-    constructor(x: Double, y: Double, angle: Double, hp: Double, name: String = "agent") {
+    constructor(x: Double, y: Double, angle: Double, hp: Double, name: String) {
         this.x = x
         this.y = y
         this.angle = angle
@@ -93,12 +93,4 @@ open class BattleAgent : ObjectInstance, MutableState {
     override fun copyWithName(objectName: String?): ObjectInstance = BattleAgent(x, y, angle, hp, objectName.toString())
 
     override fun toString(): String = StateUtilities.stateToString(this)
-
-    class Enemy : BattleAgent {
-        constructor(x: Double, y: Double, angle: Double, hp: Double, name: String) : super(x, y, angle, hp, name) { }
-
-        override fun className(): String = Static.CLASS_ENEMY
-
-        override fun copy(): Enemy = Enemy(x, y, angle, hp, name)
-    }
 }

@@ -13,7 +13,7 @@ class BattleDomain : DomainGenerator {
         val domain = OOSADomain()
 
         domain.addStateClass(BattleAgent.Static.CLASS, BattleAgent::class.java)
-                .addStateClass(BattleAgent.Static.CLASS_ENEMY, BattleAgent.Enemy::class.java)
+                .addStateClass(BattleAgent.Static.CLASS_ENEMY, BattleEnemy::class.java)
 
         domain.addActionType(UniversalActionType(BattleAgent.Static.Action.GO_FORWARD))
                 .addActionType(UniversalActionType(BattleAgent.Static.Action.GO_BACKWARD))
