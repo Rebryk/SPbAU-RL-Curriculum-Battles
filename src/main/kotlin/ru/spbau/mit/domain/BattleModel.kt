@@ -52,6 +52,12 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
 
     private fun rotate(agent: BattleAgent, angle: Double) {
         agent.angle += angle
-        // TODO: take module
+
+        // TODO: fix module
+        if (agent.angle < 0) {
+            agent.angle += 2 * Math.PI
+        } else if (agent.angle >= 2 * Math.PI) {
+            agent.angle -= 2 * Math.PI
+        }
     }
 }
