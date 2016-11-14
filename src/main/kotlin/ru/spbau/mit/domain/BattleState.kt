@@ -11,16 +11,9 @@ import burlap.mdp.core.state.annotations.ShallowCopyState
 import java.util.*
 
 @ShallowCopyState
-class BattleState : MutableOOState {
-    private var agent: BattleAgent
-    private var enemy: BattleEnemy
-    private var bullets: MutableList<BattleBullet>
-
-    constructor(agent: BattleAgent, enemy: BattleEnemy, bullets: MutableList<BattleBullet>) {
-        this.agent = agent
-        this.enemy = enemy
-        this.bullets = bullets
-    }
+class BattleState(private var agent: BattleAgent,
+                  private var enemy: BattleEnemy,
+                  private var bullets: MutableList<BattleBullet>) : MutableOOState {
 
     override fun addObject(obj: ObjectInstance?): MutableOOState {
         when (obj) {
@@ -35,7 +28,7 @@ class BattleState : MutableOOState {
     }
 
     override fun removeObject(objectName: String?): MutableOOState {
-        when (objectName.toString()) {
+        when (objectName) {
             agent.name -> agent = agent.copy()
             enemy.name -> enemy = enemy.copy()
             else -> {
@@ -52,14 +45,27 @@ class BattleState : MutableOOState {
     }
 
     override fun renameObject(objectName: String?, newName: String?): MutableOOState {
-        // TODO: implement
+        when (objectName) {
+            agent.name -> throw RuntimeException("You can't rename agent!")
+            enemy.name -> throw RuntimeException("You can't rename enemy agent!")
+            else -> {
+                val index = OOStateUtilities.objectIndexWithName(bullets, objectName)
+                if (index != -1) {
+                    val bullet = bullets[index]
+                    touchBullets().removeAt(index)
+                    bullets.add(index, bullet.copyWithName(newName) as BattleBullet)
+                } else {
+                    throw UnknownObjectException(objectName)
+                }
+            }
+        }
         throw UnsupportedOperationException("not implemented")
     }
 
     override fun numObjects(): Int = 2 + bullets.size
 
     override fun `object`(objectName: String?): ObjectInstance {
-        return when (objectName.toString()) {
+        return when (objectName) {
             agent.name -> agent
             enemy.name -> enemy
             else -> {
@@ -82,16 +88,30 @@ class BattleState : MutableOOState {
     }
 
     override fun objectsOfClass(className: String?): MutableList<ObjectInstance> {
-        return when (className.toString()) {
-            BattleAgent.Static.CLASS -> mutableListOf(agent)
-            BattleAgent.Static.CLASS_ENEMY -> mutableListOf(enemy)
-            BattleBullet.Static.CLASS -> ArrayList<ObjectInstance>(bullets)
+        return when (className) {
+            BattleAgent.CLASS -> mutableListOf(agent)
+            BattleAgent.CLASS_ENEMY -> mutableListOf(enemy)
+            BattleBullet.CLASS -> ArrayList<ObjectInstance>(bullets)
             else -> throw UnknownClassException(className)
         }
     }
 
-    override fun set(variableKey: Any?, value: Any?): MutableState {
-        // TODO: implement
+    override fun set(variableKey: Any?, variableValue: Any?): MutableState {
+        val key = OOStateUtilities.generateKey(variableKey)
+
+        when (key.obName) {
+            agent.name -> touchAgent().set(key.obVarKey, variableValue)
+            enemy.name -> touchEnemy().set(key.obVarKey, variableValue)
+            else -> {
+                val index = OOStateUtilities.objectIndexWithName(bullets, key.obName)
+                if (index != -1) {
+                    touchBullet(index).set(key.obVarKey, variableValue)
+                } else {
+                    throw UnknownObjectException(key.obName)
+                }
+            }
+        }
+
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -103,8 +123,25 @@ class BattleState : MutableOOState {
 
     override fun toString(): String = OOStateUtilities.ooStateToString(this)
 
-    private fun touchBullets(): MutableList<BattleBullet> {
+    fun touchBullets(): MutableList<BattleBullet> {
         bullets = ArrayList<BattleBullet>(bullets)
         return bullets
+    }
+
+    fun touchBullet(index: Int): BattleBullet {
+        val bullet = bullets[index].copy()
+        touchBullets().removeAt(index)
+        touchBullets().add(index, bullet)
+        return bullet
+    }
+
+    fun touchAgent() : BattleAgent {
+        agent = agent.copy()
+        return agent
+    }
+
+    fun touchEnemy() : BattleEnemy {
+        enemy = enemy.copy()
+        return enemy
     }
 }

@@ -4,14 +4,9 @@ import burlap.mdp.core.StateTransitionProb
 import burlap.mdp.core.action.Action
 import burlap.mdp.core.state.State
 import burlap.mdp.singleagent.model.statemodel.FullStateModel
+import ru.spbau.mit.bot.BattleBot
 
-class BattleModel : FullStateModel {
-    val physicsParameters: BattlePhysicsParameters
-
-    constructor(physicsParameters: BattlePhysicsParameters) {
-        this.physicsParameters = physicsParameters
-    }
-
+class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: BattleBot) : FullStateModel {
     override fun stateTransitions(state: State?, action: Action?): MutableList<StateTransitionProb> {
         return FullStateModel.Helper.deterministicTransition(this, state, action)
     }
@@ -21,8 +16,37 @@ class BattleModel : FullStateModel {
             throw RuntimeException("State and action have to be not null!")
         }
 
-        // TODO: implement
+        val newState = state.copy() as BattleState
 
-        throw UnsupportedOperationException("not implemented")
+        performAction(newState.touchAgent(), action.actionName())
+        performAction(newState.touchEnemy(), bot.nextAction(state, physicsParameters))
+
+        return newState
+    }
+
+    private fun performAction(agent: BattleAgent, actionName: String) {
+        when (actionName) {
+            BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, Math.PI / 2)
+            BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -Math.PI / 2)
+            BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle + Math.PI / 2)
+            BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle - Math.PI / 2)
+            BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI)
+            BattleAgent.Companion.Action.GO_RIGHT -> move(agent, agent.angle)
+            BattleAgent.Companion.Action.SKIP -> { /* just skip */ }
+            else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
+        }
+    }
+
+    private fun move(agent: BattleAgent, angle: Double) {
+        agent.x += Math.cos(angle) * physicsParameters.unitSpeed
+        agent.y += Math.sin(angle) * physicsParameters.unitSpeed
+
+        agent.x = Math.max(0.0, Math.min(agent.x, physicsParameters.width))
+        agent.y = Math.max(0.0, Math.min(agent.y, physicsParameters.height))
+    }
+
+    private fun rotate(agent: BattleAgent, angle: Double) {
+        agent.angle += angle
+        // TODO: take module
     }
 }
