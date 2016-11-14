@@ -24,10 +24,15 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         return newState
     }
 
+    /**
+     * Applies agent action to the current state
+     * @param agent agent which performs action
+     * @param actionName name of the action
+     */
     private fun performAction(agent: BattleAgent, actionName: String) {
         when (actionName) {
-            BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, Math.PI / 2)
-            BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -Math.PI / 2)
+            BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, physicsParameters.unitRotationAngle)
+            BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -physicsParameters.unitRotationAngle)
             BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle + Math.PI / 2)
             BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle - Math.PI / 2)
             BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI)

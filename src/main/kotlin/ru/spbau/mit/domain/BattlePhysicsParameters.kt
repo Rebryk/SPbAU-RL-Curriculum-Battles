@@ -1,6 +1,10 @@
 package ru.spbau.mit.domain
 
-data class BattlePhysicsParameters(var width: Double = 0.0,
-                                   var height: Double = 0.0,
-                                   var unitSpeed: Double = 0.0,
-                                   var bulletAcceleration: Double = 0.0)
+/**
+ * A data class for holding the physics parameters
+ */
+data class BattlePhysicsParameters(var width: Double = 1000.0,
+                                   var height: Double = 1000.0,
+                                   var unitSpeed: Double = 20.0,
+                                   var unitRotationAngle: Double = Math.PI / 18.0,
+                                   var bulletAcceleration: Double = 100.0)

@@ -20,7 +20,7 @@ open class BattleAgent(var x: Double,
         /**
          * Agent parameters:
          * X, Y - coordinates
-         * ANGLE - [0, 2 * Pi)
+         * ANGLE - agent direction
          * HP - health points
          */
         object Var {

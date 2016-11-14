@@ -13,7 +13,7 @@ import burlap.mdp.singleagent.oo.OOSADomain
 import ru.spbau.mit.bot.BattleBotEmpty
 
 class BattleDomain : DomainGenerator {
-    private val physicsParameters: BattlePhysicsParameters = BattlePhysicsParameters(1000.0, 700.0, 20.0, 100.0)
+    val physicsParameters: BattlePhysicsParameters = BattlePhysicsParameters()
 
     override fun generateDomain(): Domain? {
         val domain = OOSADomain()
@@ -53,7 +53,7 @@ class BattleDomain : DomainGenerator {
         val SAME_POINT = "SAME_POINT"
     }
 
-    /** Generate all propositional functions
+    /** Generates all propositional functions
      * @return propositional functions
      */
     fun generatePropositionalFunctions(): List<PropositionalFunction> {
