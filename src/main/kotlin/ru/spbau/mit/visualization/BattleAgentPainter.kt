@@ -33,9 +33,12 @@ open class BattleAgentPainter(private val physicsParameters: BattlePhysicsParame
         val agentY = obj.get(BattleAgent.Companion.Var.Y) as Double
         val agentAngle = obj.get(BattleAgent.Companion.Var.ANGLE) as Double
 
+        val scaleX = cWidth / physicsParameters.width
+        val scaleY = cHeight / physicsParameters.height
+
         g2.color = color
-        val x = (cWidth * agentX / physicsParameters.width).toInt()
-        val y = (cHeight - cHeight * agentY / physicsParameters.height).toInt()
+        val x = (agentX * scaleX).toInt()
+        val y = (cHeight - scaleY * agentY).toInt()
         val angle = agentAngle + Math.PI / 2
 
         g2.fillOval(x - radius, y - radius, 2 * radius, 2 * radius)

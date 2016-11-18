@@ -22,8 +22,8 @@ import java.util.*
 fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
-    val initState = BattleState(BattleAgent(100.0, 100.0, 0.0, 100.0, "agent"),
-            BattleEnemy(900.0, 900.0, 0.0, 100.0, "enemy"),
+    val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100.0, "agent"),
+            BattleEnemy(220.0, 180.0, 0.0, 100.0, "enemy"),
             arrayListOf())
 
     val inputFeatures = ConcatenatedObjectFeatures()
@@ -47,10 +47,12 @@ fun main(args: Array<String>) {
     val agent = GradientDescentSarsaLam(domain, 0.99, vfa, 0.02, 0.5)
 
     val visualizer = BattleVisualizer.getVisualizer(generator.physicsParameters)
+    val environment = SimulatedEnvironment(domain, initState)
+
+    //setupExplorer(domain, environment, visualizer)
+
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
-
-    val environment = SimulatedEnvironment(domain, initState)
 
     val episodes = ArrayList<Episode>()
     for (i in 0..10000) {

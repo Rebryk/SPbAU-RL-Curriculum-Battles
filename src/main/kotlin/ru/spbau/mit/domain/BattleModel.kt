@@ -5,6 +5,7 @@ import burlap.mdp.core.action.Action
 import burlap.mdp.core.state.State
 import burlap.mdp.singleagent.model.statemodel.FullStateModel
 import ru.spbau.mit.bot.BattleBot
+import java.awt.geom.Line2D
 
 class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: BattleBot) : FullStateModel {
     override fun stateTransitions(state: State?, action: Action?): MutableList<StateTransitionProb> {
@@ -43,11 +44,13 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
     }
 
     private fun move(agent: BattleAgent, angle: Double) {
-        agent.x += Math.cos(angle) * physicsParameters.unitSpeed
-        agent.y += Math.sin(angle) * physicsParameters.unitSpeed
+        val x = agent.x + Math.cos(angle) * physicsParameters.unitSpeed
+        val y = agent.y + Math.sin(angle) * physicsParameters.unitSpeed
 
-        agent.x = Math.max(0.0, Math.min(agent.x, physicsParameters.width))
-        agent.y = Math.max(0.0, Math.min(agent.y, physicsParameters.height))
+        if (!physicsParameters.intersectsWall(Line2D.Double(agent.x, agent.y, x, y))) {
+            agent.x = Math.max(0.0, Math.min(x, physicsParameters.width))
+            agent.y = Math.max(0.0, Math.min(y, physicsParameters.height))
+        }
     }
 
     private fun rotate(agent: BattleAgent, angle: Double) {

@@ -18,7 +18,7 @@ class BattleVisualizer {
 
         fun getStateRenderLayer(physicsParameters: BattlePhysicsParameters): StateRenderLayer {
             val renderLayer = StateRenderLayer()
-            renderLayer.addStatePainter(BattleStatePainter())
+            renderLayer.addStatePainter(BattleStatePainter(physicsParameters))
 
             val statePainter = OOStatePainter()
             statePainter.addObjectClassPainter(BattleAgent.CLASS, BattleAgentPainter(physicsParameters))
