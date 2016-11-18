@@ -12,11 +12,11 @@ import java.awt.Graphics2D
 class BattleStatePainter(private val physicsParameters: BattlePhysicsParameters) : StatePainter {
     override fun paint(g2: Graphics2D?, state: State?, cWidth: Float, cHeight: Float) {
         if (g2 == null) {
-            throw RuntimeException("Graphics2D is null!")
+            throw NullPointerException("Graphics2D is null!")
         }
 
         if (state == null) {
-            throw RuntimeException("State is null!")
+            throw NullPointerException("State is null!")
         }
 
         g2.color = Color.WHITE

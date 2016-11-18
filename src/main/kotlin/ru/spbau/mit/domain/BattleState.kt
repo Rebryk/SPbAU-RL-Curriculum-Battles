@@ -59,6 +59,7 @@ class BattleState(private var agent: BattleAgent,
                 }
             }
         }
+
         throw UnsupportedOperationException("not implemented")
     }
 

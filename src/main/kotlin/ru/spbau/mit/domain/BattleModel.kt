@@ -34,7 +34,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         when (actionName) {
             BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, physicsParameters.unitRotationAngle)
             BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -physicsParameters.unitRotationAngle)
-            BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle + Math.PI / 2)
+            BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle + Math.PI / 2, 1.2)
             BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle - Math.PI / 2)
             BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI)
             BattleAgent.Companion.Action.GO_RIGHT -> move(agent, agent.angle)
@@ -43,9 +43,9 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         }
     }
 
-    private fun move(agent: BattleAgent, angle: Double) {
-        val x = agent.x + Math.cos(angle) * physicsParameters.unitSpeed
-        val y = agent.y + Math.sin(angle) * physicsParameters.unitSpeed
+    private fun move(agent: BattleAgent, angle: Double, coefficient: Double = 1.0) {
+        val x = agent.x + Math.cos(angle) * physicsParameters.unitSpeed * coefficient
+        val y = agent.y + Math.sin(angle) * physicsParameters.unitSpeed * coefficient
 
         if (!physicsParameters.intersectsWall(Line2D.Double(agent.x, agent.y, x, y))) {
             agent.x = Math.max(0.0, Math.min(x, physicsParameters.width))

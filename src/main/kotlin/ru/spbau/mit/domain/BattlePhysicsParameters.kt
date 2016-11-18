@@ -8,12 +8,12 @@ import java.awt.geom.Point2D
  */
 data class BattlePhysicsParameters(var width: Double = 240.0,
                                    var height: Double = 200.0,
-                                   var unitSpeed: Double = 10.0,
+                                   var unitSpeed: Double = 4.0,
                                    var unitRotationAngle: Double = Math.PI / 18.0,
                                    var bulletAcceleration: Double = 100.0) {
 
     val walls: List<Wall> = mutableListOf(
-            Wall(75.0, 95.0, 50.0, 10.0),
+            Wall(40.0, 95.0, 160.0, 10.0),
             Wall(30.0, 170.0, 30.0, 30.0)
     )
 

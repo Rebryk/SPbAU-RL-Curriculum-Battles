@@ -51,6 +51,7 @@ fun main(args: Array<String>) {
 
     //setupExplorer(domain, environment, visualizer)
 
+
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
@@ -60,11 +61,10 @@ fun main(args: Array<String>) {
         println(i.toString() + ": " + episode.maxTimeStep())
         environment.resetEnvironment()
 
-        if (i == 9990) {
+        if (i == 9000) {
             environment.addObservers(observer)
         }
     }
-
 
     EpisodeSequenceVisualizer(visualizer, domain, episodes)
 }
