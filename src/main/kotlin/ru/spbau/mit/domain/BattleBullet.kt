@@ -13,7 +13,7 @@ class BattleBullet(var x: Double,
                    var speedY: Double,
                    var accelerationX: Double,
                    var accelerationY: Double,
-                   var damage: Double,
+                   var damage: Int,
                    var name: String) : ObjectInstance, MutableState {
 
     companion object {
@@ -41,14 +41,14 @@ class BattleBullet(var x: Double,
 
     override fun get(variableKey: Any?): Any {
         return when(variableKey.toString()) {
-            Var.X -> x
-            Var.Y -> y
-            Var.SPEED_X -> speedX
-            Var.SPEED_Y -> speedY
-            Var.ACCELERATION_X -> accelerationX
-            Var.ACCELERATION_Y -> accelerationY
-            Var.DAMAGE -> damage
-            else -> throw UnknownKeyException(variableKey)
+            Var.X               -> x
+            Var.Y               -> y
+            Var.SPEED_X         -> speedX
+            Var.SPEED_Y         -> speedY
+            Var.ACCELERATION_X  -> accelerationX
+            Var.ACCELERATION_Y  -> accelerationY
+            Var.DAMAGE          -> damage
+            else                -> throw UnknownKeyException(variableKey)
         }
     }
 
@@ -56,14 +56,14 @@ class BattleBullet(var x: Double,
         val new_value = StateUtilities.stringOrNumber(value).toDouble()
 
         when (variableKey.toString()) {
-            Var.X -> x = new_value
-            Var.Y -> y = new_value
-            Var.SPEED_X -> speedX = new_value
-            Var.SPEED_Y -> speedY = new_value
-            Var.ACCELERATION_X -> accelerationX = new_value
-            Var.ACCELERATION_Y -> accelerationY = new_value
-            Var.DAMAGE -> damage = new_value
-            else -> throw UnknownKeyException(variableKey)
+            Var.X               -> x = new_value
+            Var.Y               -> y = new_value
+            Var.SPEED_X         -> speedX = new_value
+            Var.SPEED_Y         -> speedY = new_value
+            Var.ACCELERATION_X  -> accelerationX = new_value
+            Var.ACCELERATION_Y  -> accelerationY = new_value
+            Var.DAMAGE          -> damage = new_value.toInt()
+            else                -> throw UnknownKeyException(variableKey)
         }
 
         return this

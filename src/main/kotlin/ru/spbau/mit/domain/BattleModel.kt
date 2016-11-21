@@ -6,6 +6,7 @@ import burlap.mdp.core.state.State
 import burlap.mdp.singleagent.model.statemodel.FullStateModel
 import ru.spbau.mit.bot.BattleBot
 import java.awt.geom.Line2D
+import java.awt.geom.Point2D
 
 class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: BattleBot) : FullStateModel {
     override fun stateTransitions(state: State?, action: Action?): MutableList<StateTransitionProb> {
@@ -19,8 +20,17 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
 
         val newState = state.copy() as BattleState
 
-        performAction(newState.touchAgent(), action.actionName())
-        performAction(newState.touchEnemy(), bot.nextAction(state, physicsParameters))
+        val agent = newState.touchAgent()
+        val enemy = newState.touchEnemy()
+        val bullets = newState.touchBullets()
+
+        performAction(agent, action.actionName(), bullets)
+        performAction(enemy, bot.nextAction(state, physicsParameters), bullets)
+
+        agent.cooldown = Math.max(0, agent.cooldown - 1)
+        enemy.cooldown = Math.max(0, enemy.cooldown - 1)
+
+        processBullets(newState.touchBullets(), agent, enemy)
 
         return newState
     }
@@ -30,24 +40,46 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
      * @param agent agent which performs action
      * @param actionName name of the action
      */
-    private fun performAction(agent: BattleAgent, actionName: String) {
+    private fun performAction(agent: BattleAgent, actionName: String, bullets: MutableList<BattleBullet>) {
         when (actionName) {
-            BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, physicsParameters.unitRotationAngle)
-            BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -physicsParameters.unitRotationAngle)
-            BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle + Math.PI / 2, 1.2)
-            BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle - Math.PI / 2)
-            BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI)
-            BattleAgent.Companion.Action.GO_RIGHT -> move(agent, agent.angle)
-            BattleAgent.Companion.Action.SKIP -> { /* just skip */ }
+            BattleAgent.Companion.Action.TURN_LEFT      -> rotate(agent, physicsParameters.agent.rotationAngle)
+            BattleAgent.Companion.Action.TURN_RIGHT     -> rotate(agent, -physicsParameters.agent.rotationAngle)
+            BattleAgent.Companion.Action.GO_FORWARD     -> move(agent, agent.angle + Math.PI / 2, 1.2)
+            BattleAgent.Companion.Action.GO_BACKWARD    -> move(agent, agent.angle - Math.PI / 2)
+            BattleAgent.Companion.Action.GO_LEFT        -> move(agent, agent.angle + Math.PI)
+            BattleAgent.Companion.Action.GO_RIGHT       -> move(agent, agent.angle)
+            BattleAgent.Companion.Action.SKIP           -> { /* just skip */ }
+            BattleAgent.Companion.Action.SHOOT          -> shoot(agent, bullets)
             else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
         }
     }
 
-    private fun move(agent: BattleAgent, angle: Double, coefficient: Double = 1.0) {
-        val x = agent.x + Math.cos(angle) * physicsParameters.unitSpeed * coefficient
-        val y = agent.y + Math.sin(angle) * physicsParameters.unitSpeed * coefficient
+    /**
+     * Adds new bullet to the game
+     * @param agent agent which shoots
+     * @param bullets list of all bullets in the state
+     */
+    private fun shoot(agent: BattleAgent, bullets: MutableList<BattleBullet>) {
+        if (agent.cooldown > 0) {
+            return
+        }
 
-        if (!physicsParameters.intersectsWall(Line2D.Double(agent.x, agent.y, x, y))) {
+        agent.cooldown = physicsParameters.agent.cooldown
+
+        val speedX = Math.cos(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.speed
+        val speedY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.speed
+        val accelerationX = Math.cos(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
+        val accelerationY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
+
+        val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, "bullet")
+        bullets.add(bullet)
+    }
+
+    private fun move(agent: BattleAgent, angle: Double, coefficient: Double = 1.0) {
+        val x = agent.x + Math.cos(angle) * physicsParameters.agent.speed * coefficient
+        val y = agent.y + Math.sin(angle) * physicsParameters.agent.speed * coefficient
+
+        if (!intersectsWall(Line2D.Double(agent.x, agent.y, x, y))) {
             agent.x = Math.max(0.0, Math.min(x, physicsParameters.width))
             agent.y = Math.max(0.0, Math.min(y, physicsParameters.height))
         }
@@ -62,5 +94,51 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         } else if (agent.angle >= 2 * Math.PI) {
             agent.angle -= 2 * Math.PI
         }
+    }
+
+    /**
+     * Updates bullets parameters such as speed, acceleration
+     * Also affects agent HP if bullet hits in the agent
+     * @param bullets list of all bullets in the state
+     * @param agent agent
+     * @param enemy enemy agent
+     */
+    private fun processBullets(bullets: MutableList<BattleBullet>, agent: BattleAgent, enemy: BattleAgent) {
+        val newBullets = bullets.filter {
+            it.speedX += it.accelerationX
+            it.speedY += it.accelerationY
+            val trajectory = Line2D.Double(it.x, it.y, it.x + it.speedX, it.y + it.speedY)
+
+            if (hitsTarget(trajectory, Point2D.Double(enemy.x, enemy.y))) {
+                enemy.hp = Math.max(0, enemy.hp - it.damage)
+                return@filter false
+            }
+
+            /*
+            if (hitsTarget(trajectory, Point2D.Double(agent.x, agent.y))) {
+                agent.hp = Math.max(0, agent.hp - it.damage)
+                return@filter false
+            }*/
+
+            if (intersectsWall(trajectory)) {
+                return@filter false
+            }
+
+            it.x = trajectory.x2
+            it.y = trajectory.y2
+
+            return@filter true
+        }
+
+        bullets.clear()
+        bullets.addAll(newBullets)
+    }
+
+    private fun intersectsWall(vector: Line2D.Double) : Boolean {
+        return physicsParameters.walls.filter { it.intersects(vector) }.isNotEmpty()
+    }
+
+    private fun hitsTarget(vector: Line2D.Double, target: Point2D.Double) : Boolean  {
+        return vector.ptSegDist(target) <= physicsParameters.bullet.range
     }
 }

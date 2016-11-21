@@ -4,6 +4,7 @@ import burlap.visualizer.OOStatePainter
 import burlap.visualizer.StateRenderLayer
 import burlap.visualizer.Visualizer
 import ru.spbau.mit.domain.BattleAgent
+import ru.spbau.mit.domain.BattleBullet
 import ru.spbau.mit.domain.BattlePhysicsParameters
 import java.awt.Color
 
@@ -23,6 +24,7 @@ class BattleVisualizer {
             val statePainter = OOStatePainter()
             statePainter.addObjectClassPainter(BattleAgent.CLASS, BattleAgentPainter(physicsParameters))
             statePainter.addObjectClassPainter(BattleAgent.CLASS_ENEMY, BattleAgentPainter(physicsParameters, Color.RED))
+            statePainter.addObjectClassPainter(BattleBullet.CLASS, BattleBulletPainter(physicsParameters))
 
             renderLayer.addStatePainter(statePainter)
             return renderLayer

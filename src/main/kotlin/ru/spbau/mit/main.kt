@@ -22,8 +22,8 @@ import java.util.*
 fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
-    val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100.0, "agent"),
-            BattleEnemy(220.0, 180.0, 0.0, 100.0, "enemy"),
+    val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
+            BattleEnemy(220.0, 180.0, 0.0, 100, 0, "enemy"),
             arrayListOf())
 
     val inputFeatures = ConcatenatedObjectFeatures()
@@ -36,9 +36,10 @@ fun main(args: Array<String>) {
     val yWidth = generator.physicsParameters.height / resolution
     val angleWidth = 2 * Math.PI / resolution
     val hpWidth = 100.0 / resolution
+    val cooldownWidth = generator.physicsParameters.agent.cooldown / resolution
 
     val tilecoding = TileCodingFeatures(inputFeatures)
-    tilecoding.addTilingsForAllDimensionsWithWidths(doubleArrayOf(xWidth, yWidth, angleWidth, hpWidth),
+    tilecoding.addTilingsForAllDimensionsWithWidths(doubleArrayOf(xWidth, yWidth, angleWidth, hpWidth, cooldownWidth),
             nTilings,
             TilingArrangement.RANDOM_JITTER)
 
@@ -50,7 +51,6 @@ fun main(args: Array<String>) {
     val environment = SimulatedEnvironment(domain, initState)
 
     //setupExplorer(domain, environment, visualizer)
-
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
@@ -77,5 +77,6 @@ fun setupExplorer(domain: OOSADomain, environment: SimulatedEnvironment, visuali
     explorer.addKeyAction("d", BattleAgent.Companion.Action.GO_RIGHT, "")
     explorer.addKeyAction("q", BattleAgent.Companion.Action.TURN_LEFT, "")
     explorer.addKeyAction("e", BattleAgent.Companion.Action.TURN_RIGHT, "")
+    explorer.addKeyAction("x", BattleAgent.Companion.Action.SHOOT, "")
     explorer.initGUI()
 }
