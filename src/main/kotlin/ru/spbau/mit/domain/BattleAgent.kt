@@ -10,7 +10,8 @@ import burlap.mdp.core.state.annotations.DeepCopyState
 open class BattleAgent(var x: Double,
                        var y: Double,
                        var angle: Double,
-                       var hp: Double,
+                       var hp: Int,
+                       var cooldown: Int,
                        var name: String): ObjectInstance, MutableState {
 
     companion object {
@@ -22,12 +23,14 @@ open class BattleAgent(var x: Double,
          * X, Y - coordinates
          * ANGLE - agent direction
          * HP - health points
+         * COOLDOWN - time before next shot
          */
         object Var {
             val X: String = "X"
             val Y: String = "Y"
             val ANGLE: String = "ANGLE"
             val HP: String = "HP"
+            val COOLDOWN: String = "COOLDOWN"
         }
 
         /**
@@ -47,16 +50,17 @@ open class BattleAgent(var x: Double,
             val SHOOT: String = "SHOOT"
         }
 
-        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.ANGLE, Var.HP)
+        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.ANGLE, Var.HP, Var.COOLDOWN)
     }
 
     override fun get(variableKey: Any?): Any {
         return when (variableKey.toString()) {
-            Var.X -> x
-            Var.Y -> y
-            Var.ANGLE -> angle
-            Var.HP -> hp
-            else -> throw UnknownKeyException(variableKey)
+            Var.X           -> x
+            Var.Y           -> y
+            Var.ANGLE       -> angle
+            Var.HP          -> hp
+            Var.COOLDOWN    -> cooldown
+            else            -> throw UnknownKeyException(variableKey)
         }
     }
 
@@ -64,11 +68,12 @@ open class BattleAgent(var x: Double,
         val new_value = StateUtilities.stringOrNumber(value).toDouble()
 
         when (variableKey.toString()) {
-            Var.X -> x = new_value
-            Var.Y -> y = new_value
-            Var.ANGLE -> angle = new_value
-            Var.HP -> hp = new_value
-            else -> throw UnknownKeyException(variableKey)
+            Var.X           -> x = new_value
+            Var.Y           -> y = new_value
+            Var.ANGLE       -> angle = new_value
+            Var.HP          -> hp = new_value.toInt()
+            Var.COOLDOWN    -> cooldown = new_value.toInt()
+            else            -> throw UnknownKeyException(variableKey)
         }
 
         return this
@@ -80,9 +85,9 @@ open class BattleAgent(var x: Double,
 
     override fun name(): String = name
 
-    override fun copy(): BattleAgent = BattleAgent(x, y, angle, hp, name)
+    override fun copy(): BattleAgent = BattleAgent(x, y, angle, hp, cooldown, name)
 
-    override fun copyWithName(objectName: String?): ObjectInstance = BattleAgent(x, y, angle, hp, objectName!!)
+    override fun copyWithName(objectName: String?): ObjectInstance = BattleAgent(x, y, angle, hp, cooldown, objectName!!)
 
     override fun toString(): String = StateUtilities.stateToString(this)
 }

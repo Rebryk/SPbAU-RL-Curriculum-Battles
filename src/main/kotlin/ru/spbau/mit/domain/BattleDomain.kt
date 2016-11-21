@@ -28,6 +28,7 @@ class BattleDomain : DomainGenerator {
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.TURN_LEFT))
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.TURN_RIGHT))
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.SKIP))
+                .addActionType(UniversalActionType(BattleAgent.Companion.Action.SHOOT))
 
         OODomain.Helper.addPfsToDomain(domain, generatePropositionalFunctions())
 
@@ -69,7 +70,7 @@ class BattleDomain : DomainGenerator {
         override fun isTrue(state: OOState?, vararg params: String?): Boolean {
             val agent = state?.`object`(params[0])
             agent?.let {
-                return (it.get(BattleAgent.Companion.Var.HP) as Double) == 0.0
+                return (it.get(BattleAgent.Companion.Var.HP) as Int) == 0
             }
 
             return false
