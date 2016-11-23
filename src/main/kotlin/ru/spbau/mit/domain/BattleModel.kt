@@ -7,6 +7,7 @@ import burlap.mdp.singleagent.model.statemodel.FullStateModel
 import ru.spbau.mit.bot.BattleBot
 import java.awt.geom.Line2D
 import java.awt.geom.Point2D
+import java.awt.geom.Rectangle2D
 
 class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: BattleBot) : FullStateModel {
     override fun stateTransitions(state: State?, action: Action?): MutableList<StateTransitionProb> {
@@ -70,9 +71,10 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         val speedY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.speed
         val accelerationX = Math.cos(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
         val accelerationY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
+        val enemy = agent.className() == BattleAgent.CLASS_ENEMY
 
-        val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, "bullet")
-        bullets.add(bullet)
+        val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, enemy, "bullet")
+        addBullet(bullets, bullet)
     }
 
     private fun move(agent: BattleAgent, angle: Double, coefficient: Double = 1.0) {
@@ -96,6 +98,20 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         }
     }
 
+    private fun addBullet(bullets: MutableList<BattleBullet>, bullet: BattleBullet) {
+        bullets.removeIf { it.isEmpty() }
+
+        // TODO: implement replacement strategy
+        // TODO: fix order of bullets to minimize count of the states
+        if (bullets.size < BattleState.BULLETS_COUNT) {
+            bullets.add(bullet)
+        }
+
+        while (bullets.size < BattleState.BULLETS_COUNT) {
+            bullets.add(BattleBullet())
+        }
+    }
+
     /**
      * Updates bullets parameters such as speed, acceleration
      * Also affects agent HP if bullet hits in the agent
@@ -104,7 +120,11 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
      * @param enemy enemy agent
      */
     private fun processBullets(bullets: MutableList<BattleBullet>, agent: BattleAgent, enemy: BattleAgent) {
-        val newBullets = bullets.filter {
+        bullets.removeIf {
+            if (it.isEmpty()) {
+                return@removeIf true
+            }
+
             it.speedX += it.accelerationX
             it.speedY += it.accelerationY
 
@@ -115,36 +135,40 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
 
             val trajectory = Line2D.Double(it.x, it.y, it.x + it.speedX, it.y + it.speedY)
 
-            if (hitsTarget(trajectory, Point2D.Double(enemy.x, enemy.y))) {
+            if (!it.enemy && hitsTarget(trajectory, Point2D.Double(enemy.x, enemy.y))) {
                 enemy.hp = Math.max(0, enemy.hp - it.damage)
-                return@filter false
+                return@removeIf true
             }
 
-            /*
-            if (hitsTarget(trajectory, Point2D.Double(agent.x, agent.y))) {
+            if (it.enemy && hitsTarget(trajectory, Point2D.Double(agent.x, agent.y))) {
                 agent.hp = Math.max(0, agent.hp - it.damage)
-                return@filter false
-            }*/
+                return@removeIf true
+            }
 
-            if (intersectsWall(trajectory)) {
-                return@filter false
+            if (isOutOfTheWorld(Point2D.Double(it.x, it.y)) || intersectsWall(trajectory)) {
+                return@removeIf true
             }
 
             it.x = trajectory.x2
             it.y = trajectory.y2
 
-            return@filter true
+            return@removeIf false
         }
 
-        bullets.clear()
-        bullets.addAll(newBullets)
+        while (bullets.size < BattleState.BULLETS_COUNT) {
+            bullets.add(BattleBullet())
+        }
     }
 
-    private fun intersectsWall(vector: Line2D.Double) : Boolean {
+    private fun isOutOfTheWorld(point: Point2D): Boolean {
+        return !Rectangle2D.Double(0.0, 0.0, physicsParameters.width, physicsParameters.height).contains(point)
+    }
+
+    private fun intersectsWall(vector: Line2D): Boolean {
         return physicsParameters.walls.filter { it.intersects(vector) }.isNotEmpty()
     }
 
-    private fun hitsTarget(vector: Line2D.Double, target: Point2D.Double) : Boolean  {
+    private fun hitsTarget(vector: Line2D, target: Point2D.Double): Boolean  {
         return vector.ptSegDist(target) <= physicsParameters.bullet.range
     }
 }

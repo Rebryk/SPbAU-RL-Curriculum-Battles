@@ -20,6 +20,7 @@ class BattleDomain : DomainGenerator {
 
         domain.addStateClass(BattleAgent.CLASS, BattleAgent::class.java)
                 .addStateClass(BattleAgent.CLASS_ENEMY, BattleEnemy::class.java)
+                .addStateClass(BattleBullet.CLASS, BattleBullet::class.java)
 
         domain.addActionType(UniversalActionType(BattleAgent.Companion.Action.GO_FORWARD))
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.GO_BACKWARD))

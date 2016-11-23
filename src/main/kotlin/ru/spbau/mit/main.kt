@@ -12,10 +12,7 @@ import burlap.mdp.singleagent.environment.SimulatedEnvironment
 import burlap.mdp.singleagent.oo.OOSADomain
 import burlap.shell.visual.VisualExplorer
 import burlap.visualizer.Visualizer
-import ru.spbau.mit.domain.BattleAgent
-import ru.spbau.mit.domain.BattleDomain
-import ru.spbau.mit.domain.BattleEnemy
-import ru.spbau.mit.domain.BattleState
+import ru.spbau.mit.domain.*
 import ru.spbau.mit.visualization.BattleVisualizer
 import java.util.*
 
@@ -24,10 +21,11 @@ fun main(args: Array<String>) {
     val domain = generator.generateDomain() as OOSADomain
     val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
             BattleEnemy(220.0, 180.0, 0.0, 100, 0, "enemy"),
-            arrayListOf())
+            arrayListOf(BattleBullet(), BattleBullet()))
 
     val inputFeatures = ConcatenatedObjectFeatures()
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
+            .addObjectVectorizion(BattleBullet.CLASS, NumericVariableFeatures())
 
     val nTilings = 4
     val resolution = 20.0
@@ -37,11 +35,16 @@ fun main(args: Array<String>) {
     val angleWidth = 2 * Math.PI / resolution
     val hpWidth = 100.0 / resolution
     val cooldownWidth = generator.physicsParameters.agent.cooldown / resolution
+    val speedWidth = generator.physicsParameters.bullet.maxSpeed / resolution
+    val ownerWidth = 2.0
+
+    val widths = mutableListOf(xWidth, yWidth, angleWidth, hpWidth, cooldownWidth)
+    for (i in 1..BattleState.BULLETS_COUNT) {
+        widths.addAll(listOf(xWidth, yWidth, speedWidth, speedWidth, ownerWidth))
+    }
 
     val tilecoding = TileCodingFeatures(inputFeatures)
-    tilecoding.addTilingsForAllDimensionsWithWidths(doubleArrayOf(xWidth, yWidth, angleWidth, hpWidth, cooldownWidth),
-            nTilings,
-            TilingArrangement.RANDOM_JITTER)
+    tilecoding.addTilingsForAllDimensionsWithWidths(widths.toDoubleArray(), nTilings, TilingArrangement.RANDOM_JITTER)
 
     val defaultQ = 0.5
     val vfa = tilecoding.generateVFA(defaultQ / nTilings)
@@ -50,10 +53,12 @@ fun main(args: Array<String>) {
     val visualizer = BattleVisualizer.getVisualizer(generator.physicsParameters)
     val environment = SimulatedEnvironment(domain, initState)
 
-    //setupExplorer(domain, environment, visualizer)
+    setupExplorer(domain, environment, visualizer)
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
+
+    environment.addObservers(observer)
 
     val episodes = ArrayList<Episode>()
     for (i in 0..10000) {
@@ -62,7 +67,7 @@ fun main(args: Array<String>) {
         environment.resetEnvironment()
 
         if (i == 9000) {
-            environment.addObservers(observer)
+
         }
     }
 

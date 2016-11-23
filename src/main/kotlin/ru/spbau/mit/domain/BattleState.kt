@@ -15,6 +15,10 @@ class BattleState(private var agent: BattleAgent,
                   private var enemy: BattleEnemy,
                   private var bullets: MutableList<BattleBullet>) : MutableOOState {
 
+    companion object {
+        const val BULLETS_COUNT = 2
+    }
+
     override fun addObject(obj: ObjectInstance?): MutableOOState {
         when (obj) {
             is BattleAgent -> agent = obj

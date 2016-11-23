@@ -13,7 +13,7 @@ data class BattlePhysicsParameters(var width: Double = 240.0,
 
     data class Agent(var minHp: Int = 0,
                      var maxHP: Int = 100,
-                     var cooldown: Int = 5,
+                     var cooldown: Int = 20,
                      var speed: Double = 2.0,
                      var rotationAngle: Double = Math.PI / 18.0)
 
@@ -32,9 +32,9 @@ data class BattlePhysicsParameters(var width: Double = 240.0,
      */
 
     data class Wall(val x: Double, val y: Double, val width: Double, val height: Double) {
-        fun contains(point: Point2D.Double) = point.x >= x && point.x < x + width && point.y >= y && point.y < y + height
+        fun contains(point: Point2D) = point.x >= x && point.x < x + width && point.y >= y && point.y < y + height
 
-        fun intersects(vector: Line2D.Double) = vector.intersects(x, y, width, height)
+        fun intersects(vector: Line2D) = vector.intersects(x, y, width, height)
     }
 
     val walls: List<Wall> = mutableListOf(
