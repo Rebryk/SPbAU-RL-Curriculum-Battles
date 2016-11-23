@@ -5,6 +5,7 @@ import burlap.mdp.core.oo.state.ObjectInstance
 import burlap.visualizer.ObjectPainter
 import ru.spbau.mit.domain.BattleAgent
 import ru.spbau.mit.domain.BattlePhysicsParameters
+import sun.management.Agent
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Path2D
@@ -29,17 +30,15 @@ open class BattleAgentPainter(private val physicsParameters: BattlePhysicsParame
             throw RuntimeException("Object is null!")
         }
 
-        val agentX = obj.get(BattleAgent.Companion.Var.X) as Double
-        val agentY = obj.get(BattleAgent.Companion.Var.Y) as Double
-        val agentAngle = obj.get(BattleAgent.Companion.Var.ANGLE) as Double
+        val agent = obj as BattleAgent
 
         val scaleX = cWidth / physicsParameters.width
         val scaleY = cHeight / physicsParameters.height
 
         g2.color = color
-        val x = (agentX * scaleX).toInt()
-        val y = (cHeight - scaleY * agentY).toInt()
-        val angle = agentAngle + Math.PI / 2
+        val x = (agent.x * scaleX).toInt()
+        val y = (cHeight - scaleY * agent.y).toInt()
+        val angle = agent.angle + Math.PI / 2
 
         g2.fillOval(x - radius, y - radius, 2 * radius, 2 * radius)
 

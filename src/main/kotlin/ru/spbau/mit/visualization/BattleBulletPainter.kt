@@ -25,14 +25,17 @@ class BattleBulletPainter(private val physicsParameters: BattlePhysicsParameters
             throw RuntimeException("Object is null!")
         }
 
-        val bulletX = obj.get(BattleBullet.Companion.Var.X) as Double
-        val bulletY = obj.get(BattleBullet.Companion.Var.Y) as Double
+        val bullet = obj as BattleBullet
+
+        if (bullet.isEmpty()) {
+            return
+        }
 
         val scaleX = cWidth / physicsParameters.width
         val scaleY = cHeight / physicsParameters.height
 
-        val x = (bulletX * scaleX).toInt()
-        val y = (cHeight - scaleY * bulletY).toInt()
+        val x = (bullet.x * scaleX).toInt()
+        val y = (cHeight - scaleY * bullet.y).toInt()
 
         g2.color = color
         g2.fillOval(x - radius, y - radius, 2 * radius, 2 * radius)
