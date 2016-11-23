@@ -40,7 +40,10 @@ open class BattleAgentPainter(private val physicsParameters: BattlePhysicsParame
         val y = (cHeight - scaleY * agent.y).toInt()
         val angle = agent.angle + Math.PI / 2
 
-        g2.fillOval(x - radius, y - radius, 2 * radius, 2 * radius)
+        g2.drawOval(x - radius, y - radius, 2 * radius, 2 * radius)
+
+        val angle2 = (3.6 * agent.hp).toInt()
+        g2.fillArc(x - radius, y - radius, 2 * radius, 2 * radius, 90, -angle2)
 
         drawPointer(g2, x, y, angle)
     }
