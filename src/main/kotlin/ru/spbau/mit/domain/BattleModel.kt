@@ -107,6 +107,12 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         val newBullets = bullets.filter {
             it.speedX += it.accelerationX
             it.speedY += it.accelerationY
+
+            val length = Math.sqrt(Math.pow(it.speedX, 2.0) + Math.pow(it.speedY, 2.0))
+            val coef = Math.min(physicsParameters.bullet.maxSpeed, length) / length
+            it.speedX *= coef
+            it.speedY *= coef
+
             val trajectory = Line2D.Double(it.x, it.y, it.x + it.speedX, it.y + it.speedY)
 
             if (hitsTarget(trajectory, Point2D.Double(enemy.x, enemy.y))) {

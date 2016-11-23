@@ -18,6 +18,7 @@ data class BattlePhysicsParameters(var width: Double = 240.0,
                      var rotationAngle: Double = Math.PI / 18.0)
 
     data class Bullet(var speed: Double = 3.0,
+                      var maxSpeed: Double = 20.0,
                       var acceleration: Double = 1.5,
                       var range: Double = 10.0,
                       var damage: Int = 20)

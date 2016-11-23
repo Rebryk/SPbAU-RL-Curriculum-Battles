@@ -23,20 +23,15 @@ class BattleBullet(var x: Double,
          * Bullet parameters:
          * X, Y - coordinates
          * SPEED_X, SPEED_Y - vector of speed
-         * ACC_X, ACC_Y - vector of acceleration
-         * DAMAGE - bullet damage
          */
         object Var {
             val X: String = "X"
             val Y: String = "Y"
             val SPEED_X: String = "SPEED_X"
             val SPEED_Y: String = "SPEED_Y"
-            val ACCELERATION_X: String = "ACCELERATION_X"
-            val ACCELERATION_Y: String = "ACCELERATION_Y"
-            val DAMAGE: String = "DAMAGE"
         }
 
-        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.SPEED_X, Var.SPEED_Y, Var.ACCELERATION_X, Var.ACCELERATION_Y, Var.DAMAGE)
+        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.SPEED_X, Var.SPEED_Y)
     }
 
     override fun get(variableKey: Any?): Any {
@@ -45,9 +40,6 @@ class BattleBullet(var x: Double,
             Var.Y               -> y
             Var.SPEED_X         -> speedX
             Var.SPEED_Y         -> speedY
-            Var.ACCELERATION_X  -> accelerationX
-            Var.ACCELERATION_Y  -> accelerationY
-            Var.DAMAGE          -> damage
             else                -> throw UnknownKeyException(variableKey)
         }
     }
@@ -60,9 +52,6 @@ class BattleBullet(var x: Double,
             Var.Y               -> y = new_value
             Var.SPEED_X         -> speedX = new_value
             Var.SPEED_Y         -> speedY = new_value
-            Var.ACCELERATION_X  -> accelerationX = new_value
-            Var.ACCELERATION_Y  -> accelerationY = new_value
-            Var.DAMAGE          -> damage = new_value.toInt()
             else                -> throw UnknownKeyException(variableKey)
         }
 
