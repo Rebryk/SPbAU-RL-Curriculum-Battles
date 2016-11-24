@@ -1,7 +1,7 @@
 package ru.spbau.mit.domain
 
 import burlap.mdp.core.oo.state.ObjectInstance
-import burlap.mdp.core.state.MutableState
+import burlap.mdp.core.state.State
 import burlap.mdp.core.state.StateUtilities
 import burlap.mdp.core.state.UnknownKeyException
 import burlap.mdp.core.state.annotations.DeepCopyState
@@ -12,7 +12,7 @@ open class BattleAgent(var x: Double,
                        var angle: Double,
                        var hp: Int,
                        var cooldown: Int,
-                       var name: String): ObjectInstance, MutableState {
+                       var name: String): ObjectInstance, State {
 
     companion object {
         val CLASS: String = "CLASS_AGENT"
@@ -62,21 +62,6 @@ open class BattleAgent(var x: Double,
             Var.COOLDOWN    -> cooldown
             else            -> throw UnknownKeyException(variableKey)
         }
-    }
-
-    override fun set(variableKey: Any?, value: Any?): MutableState {
-        val new_value = StateUtilities.stringOrNumber(value).toDouble()
-
-        when (variableKey.toString()) {
-            Var.X           -> x = new_value
-            Var.Y           -> y = new_value
-            Var.ANGLE       -> angle = new_value
-            Var.HP          -> hp = new_value.toInt()
-            Var.COOLDOWN    -> cooldown = new_value.toInt()
-            else            -> throw UnknownKeyException(variableKey)
-        }
-
-        return this
     }
 
     override fun variableKeys(): MutableList<Any> = keys

@@ -7,7 +7,6 @@ import burlap.mdp.core.action.UniversalActionType
 import burlap.mdp.core.oo.OODomain
 import burlap.mdp.core.oo.propositional.PropositionalFunction
 import burlap.mdp.core.oo.state.OOState
-import burlap.mdp.singleagent.common.SingleGoalPFRF
 import burlap.mdp.singleagent.model.FactoredModel
 import burlap.mdp.singleagent.oo.OOSADomain
 import ru.spbau.mit.bot.BattleBotEmpty
@@ -40,7 +39,7 @@ class BattleDomain : DomainGenerator {
         val rewardFunction = BattleRewardFunction(domain)
 
         // TODO: replace terminal function
-        val terminalFunction = SinglePFTF(domain.propFunction(SAME_POINT))
+        val terminalFunction = SinglePFTF(domain.propFunction(ENEMY_IS_DEAD))
 
         domain.model = FactoredModel(battleStateModel, rewardFunction, terminalFunction)
 
@@ -69,12 +68,15 @@ class BattleDomain : DomainGenerator {
          * @return true - if agent is dead, otherwise - false
          */
         override fun isTrue(state: OOState?, vararg params: String?): Boolean {
-            val agent = state?.`object`(params[0])
-            agent?.let {
-                return (it.get(BattleAgent.Companion.Var.HP) as Int) == 0
+            if (state == null) {
+                throw RuntimeException("Propositional function \'AgentIsDead\' has received null state!")
             }
 
-            return false
+            if (params[0] == BattleAgent.CLASS) {
+                return (state as BattleState).agent.hp == 0
+            }
+
+            return (state as BattleState).enemy.hp == 0
         }
     }
 
@@ -82,24 +84,21 @@ class BattleDomain : DomainGenerator {
 
     class EnemyIsDead(name: String) : AgentIsDead(name, BattleAgent.CLASS_ENEMY)
 
-    class AtTheSamePoint(name: String) : PropositionalFunction(name, arrayOf(BattleAgent.CLASS, BattleAgent.CLASS_ENEMY)) {
+    class AtTheSamePoint(name: String) : PropositionalFunction(name, arrayOf()) {
         override fun isTrue(state: OOState?, vararg params: String?): Boolean {
-            val agent = state?.`object`(params[0])
-            val enemy = state?.`object`(params[1])
-
-            agent?.let {
-                val x1 = it.get(BattleAgent.Companion.Var.X) as Double
-                val y1 = it.get(BattleAgent.Companion.Var.Y) as Double
-
-                enemy?.let {
-                    val x2 = it.get(BattleAgent.Companion.Var.X) as Double
-                    val y2 = it.get(BattleAgent.Companion.Var.Y) as Double
-
-                    return Math.pow(x1 - x2, 2.0) + Math.pow(y1 - y2, 2.0) < 100.0
-                }
+            if (state == null) {
+                throw RuntimeException("Propositional function \'AtTheSamePoint\' has received null state!")
             }
 
-            return false
+            val battleState = state as BattleState
+
+            val x1 = battleState.agent.x
+            val y1 = battleState.agent.y
+
+            val x2 = battleState.enemy.x
+            val y2 = battleState.enemy.y
+
+            return Math.pow(x1 - x2, 2.0) + Math.pow(y1 - y2, 2.0) < 100.0
         }
     }
 }

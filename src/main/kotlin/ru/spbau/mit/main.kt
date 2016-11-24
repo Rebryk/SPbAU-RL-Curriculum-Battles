@@ -20,8 +20,7 @@ fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
     val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
-            BattleEnemy(220.0, 180.0, 0.0, 100, 0, "enemy"),
-            arrayListOf(BattleBullet(), BattleBullet()))
+            BattleEnemy(220.0, 180.0, 0.0, 100, 0, "enemy"))
 
     val inputFeatures = ConcatenatedObjectFeatures()
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
@@ -39,7 +38,7 @@ fun main(args: Array<String>) {
     val ownerWidth = 2.0
 
     val widths = mutableListOf(xWidth, yWidth, angleWidth, hpWidth, cooldownWidth)
-    for (i in 1..BattleState.BULLETS_COUNT) {
+    for (i in 1..(2 * BattleState.BULLETS_COUNT)) {
         widths.addAll(listOf(xWidth, yWidth, speedWidth, speedWidth, ownerWidth))
     }
 
@@ -51,23 +50,24 @@ fun main(args: Array<String>) {
     val agent = GradientDescentSarsaLam(domain, 0.99, vfa, 0.02, 0.5)
 
     val visualizer = BattleVisualizer.getVisualizer(generator.physicsParameters)
-    val environment = SimulatedEnvironment(domain, initState)
+
+    val stateGenerator = CyclicStateGenerator().addState(initState)
+    val environment = SimulatedEnvironment(domain, stateGenerator)
 
     setupExplorer(domain, environment, visualizer)
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
-    environment.addObservers(observer)
-
     val episodes = ArrayList<Episode>()
+
     for (i in 0..10000) {
         val episode = agent.runLearningEpisode(environment)
         println(i.toString() + ": " + episode.maxTimeStep())
         environment.resetEnvironment()
 
         if (i == 9000) {
-
+            environment.addObservers(observer)
         }
     }
 

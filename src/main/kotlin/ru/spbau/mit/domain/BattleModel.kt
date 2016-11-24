@@ -20,18 +20,18 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         }
 
         val newState = state.copy() as BattleState
-
         val agent = newState.touchAgent()
         val enemy = newState.touchEnemy()
-        val bullets = newState.touchBullets()
+        val bullets = newState.touchAgentBullets()
 
-        performAction(agent, action.actionName(), bullets)
-        performAction(enemy, bot.nextAction(state, physicsParameters), bullets)
+        performAction(agent, action.actionName(), newState)
+        performAction(enemy, bot.nextAction(state, physicsParameters), newState)
 
         agent.cooldown = Math.max(0, agent.cooldown - 1)
         enemy.cooldown = Math.max(0, enemy.cooldown - 1)
 
-        processBullets(newState.touchBullets(), agent, enemy)
+        processBullets(bullets, agent, enemy)
+        // TODO: process enemy bullets
 
         return newState
     }
@@ -41,7 +41,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
      * @param agent agent which performs action
      * @param actionName name of the action
      */
-    private fun performAction(agent: BattleAgent, actionName: String, bullets: MutableList<BattleBullet>) {
+    private fun performAction(agent: BattleAgent, actionName: String, state: BattleState) {
         when (actionName) {
             BattleAgent.Companion.Action.TURN_LEFT      -> rotate(agent, physicsParameters.agent.rotationAngle)
             BattleAgent.Companion.Action.TURN_RIGHT     -> rotate(agent, -physicsParameters.agent.rotationAngle)
@@ -50,7 +50,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
             BattleAgent.Companion.Action.GO_LEFT        -> move(agent, agent.angle + Math.PI)
             BattleAgent.Companion.Action.GO_RIGHT       -> move(agent, agent.angle)
             BattleAgent.Companion.Action.SKIP           -> { /* just skip */ }
-            BattleAgent.Companion.Action.SHOOT          -> shoot(agent, bullets)
+            BattleAgent.Companion.Action.SHOOT          -> shoot(agent, state.getBulletsFor(agent))
             else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
         }
     }

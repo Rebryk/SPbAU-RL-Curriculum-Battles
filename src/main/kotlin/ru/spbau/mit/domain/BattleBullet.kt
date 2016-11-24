@@ -1,7 +1,7 @@
 package ru.spbau.mit.domain
 
 import burlap.mdp.core.oo.state.ObjectInstance
-import burlap.mdp.core.state.MutableState
+import burlap.mdp.core.state.State
 import burlap.mdp.core.state.StateUtilities
 import burlap.mdp.core.state.UnknownKeyException
 import burlap.mdp.core.state.annotations.DeepCopyState
@@ -15,7 +15,7 @@ class BattleBullet(var x: Double,
                    var accelerationY: Double,
                    var damage: Int,
                    var enemy: Boolean,
-                   var name: String) : ObjectInstance, MutableState {
+                   var name: String) : ObjectInstance, State {
 
     constructor(): this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, false, "empty")
 
@@ -50,21 +50,6 @@ class BattleBullet(var x: Double,
             Var.ENEMY           -> if (enemy) 1.0 else 0.0
             else                -> throw UnknownKeyException(variableKey)
         }
-    }
-
-    override fun set(variableKey: Any?, value: Any?): MutableState {
-        val new_value = StateUtilities.stringOrNumber(value).toDouble()
-
-        when (variableKey.toString()) {
-            Var.X               -> x = new_value
-            Var.Y               -> y = new_value
-            Var.SPEED_X         -> speedX = new_value
-            Var.SPEED_Y         -> speedY = new_value
-            Var.ENEMY           -> throw IllegalArgumentException("You can't change bullet owner!")
-            else                -> throw UnknownKeyException(variableKey)
-        }
-
-        return this
     }
 
     override fun variableKeys(): MutableList<Any> = keys

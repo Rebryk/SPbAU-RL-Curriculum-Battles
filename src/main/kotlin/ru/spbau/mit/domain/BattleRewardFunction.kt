@@ -11,7 +11,7 @@ class BattleRewardFunction(domain: OODomain) : RewardFunction {
     private val goalReward: Double = 1000.0
     private val defaultReward: Double = -1.0
 
-    private val didFinish: PropositionalFunction = domain.propFunction(BattleDomain.SAME_POINT)
+    private val didFinish: PropositionalFunction = domain.propFunction(BattleDomain.ENEMY_IS_DEAD)
 
     override fun reward(state: State?, action: Action?, newState: State?): Double {
         if (state == null) {
