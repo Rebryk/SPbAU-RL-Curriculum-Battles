@@ -35,7 +35,6 @@ class BattleDomain : DomainGenerator {
         val battleStateModel = BattleModel(physicsParameters, BattleBotEmpty())
 
         // TODO: replace reward function
-        //val rewardFunction = SingleGoalPFRF(domain.propFunction(SAME_POINT), 1000.0, -1.0)
         val rewardFunction = BattleRewardFunction(domain)
 
         // TODO: replace terminal function

@@ -45,10 +45,10 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         when (actionName) {
             BattleAgent.Companion.Action.TURN_LEFT      -> rotate(agent, physicsParameters.agent.rotationAngle)
             BattleAgent.Companion.Action.TURN_RIGHT     -> rotate(agent, -physicsParameters.agent.rotationAngle)
-            BattleAgent.Companion.Action.GO_FORWARD     -> move(agent, agent.angle + Math.PI / 2, 1.2)
-            BattleAgent.Companion.Action.GO_BACKWARD    -> move(agent, agent.angle - Math.PI / 2)
-            BattleAgent.Companion.Action.GO_LEFT        -> move(agent, agent.angle + Math.PI)
-            BattleAgent.Companion.Action.GO_RIGHT       -> move(agent, agent.angle)
+            BattleAgent.Companion.Action.GO_FORWARD     -> move(agent, agent.angle, 1.2)
+            BattleAgent.Companion.Action.GO_BACKWARD    -> move(agent, agent.angle + Math.PI)
+            BattleAgent.Companion.Action.GO_LEFT        -> move(agent, agent.angle + Math.PI / 2.0)
+            BattleAgent.Companion.Action.GO_RIGHT       -> move(agent, agent.angle - Math.PI / 2.0)
             BattleAgent.Companion.Action.SKIP           -> { /* just skip */ }
             BattleAgent.Companion.Action.SHOOT          -> shoot(agent, state.getBulletsFor(agent))
             else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
@@ -67,10 +67,10 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
 
         agent.cooldown = physicsParameters.agent.cooldown
 
-        val speedX = Math.cos(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.speed
-        val speedY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.speed
-        val accelerationX = Math.cos(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
-        val accelerationY = Math.sin(agent.angle + Math.PI / 2.0) * physicsParameters.bullet.acceleration
+        val speedX = Math.cos(agent.angle) * physicsParameters.bullet.speed
+        val speedY = Math.sin(agent.angle) * physicsParameters.bullet.speed
+        val accelerationX = Math.cos(agent.angle) * physicsParameters.bullet.acceleration
+        val accelerationY = Math.sin(agent.angle) * physicsParameters.bullet.acceleration
         val enemy = agent.className() == BattleAgent.CLASS_ENEMY
 
         val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, enemy, "bullet")
@@ -90,11 +90,12 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
     private fun rotate(agent: BattleAgent, angle: Double) {
         agent.angle += angle
 
-        // TODO: fix module
-        if (agent.angle < 0) {
-            agent.angle += 2 * Math.PI
-        } else if (agent.angle >= 2 * Math.PI) {
+        if (agent.angle > Math.PI) {
             agent.angle -= 2 * Math.PI
+        }
+
+        if (agent.angle <= -Math.PI) {
+            agent.angle += 2 * Math.PI
         }
     }
 
@@ -102,10 +103,12 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         bullets.removeIf { it.isEmpty() }
 
         // TODO: implement replacement strategy
-        // TODO: fix order of bullets to minimize count of the states
-        if (bullets.size < BattleState.BULLETS_COUNT) {
-            bullets.add(bullet)
+        if (bullets.size == BattleState.BULLETS_COUNT) {
+            throw RuntimeException("Too many bullets!")
         }
+
+        bullets.add(bullet)
+        bullets.sort()
 
         while (bullets.size < BattleState.BULLETS_COUNT) {
             bullets.add(BattleBullet())

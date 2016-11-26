@@ -48,6 +48,9 @@ open class BattleAgent(var x: Double,
             val SKIP: String = "SKIP"
 
             val SHOOT: String = "SHOOT"
+
+            fun isMoving(actionName: String): Boolean = listOf(GO_LEFT, GO_RIGHT, GO_BACKWARD, GO_BACKWARD).contains(actionName)
+            fun isShooting(actionName: String): Boolean = actionName == SHOOT
         }
 
         val keys = mutableListOf<Any>(Var.X, Var.Y, Var.ANGLE, Var.HP, Var.COOLDOWN)

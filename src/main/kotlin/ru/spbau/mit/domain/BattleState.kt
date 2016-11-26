@@ -9,6 +9,7 @@ import burlap.mdp.core.state.State
 import burlap.mdp.core.state.annotations.ShallowCopyState
 import java.util.*
 
+
 @ShallowCopyState
 class BattleState(var agent: BattleAgent,
                   var enemy: BattleEnemy,

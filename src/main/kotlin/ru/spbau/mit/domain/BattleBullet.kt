@@ -5,6 +5,7 @@ import burlap.mdp.core.state.State
 import burlap.mdp.core.state.StateUtilities
 import burlap.mdp.core.state.UnknownKeyException
 import burlap.mdp.core.state.annotations.DeepCopyState
+import kotlin.comparisons.compareValuesBy
 
 @DeepCopyState
 class BattleBullet(var x: Double,
@@ -15,7 +16,7 @@ class BattleBullet(var x: Double,
                    var accelerationY: Double,
                    var damage: Int,
                    var enemy: Boolean,
-                   var name: String) : ObjectInstance, State {
+                   var name: String) : ObjectInstance, State, Comparable<BattleBullet> {
 
     constructor(): this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, false, "empty")
 
@@ -65,4 +66,8 @@ class BattleBullet(var x: Double,
     }
 
     override fun toString(): String = StateUtilities.stateToString(this)
+
+    override fun compareTo(other: BattleBullet): Int {
+        return compareValuesBy(this, other, { it.x }, { it.y }, { it.speedX }, { it.speedY })
+    }
 }
