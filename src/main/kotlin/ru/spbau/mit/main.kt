@@ -35,11 +35,10 @@ fun main(args: Array<String>) {
     val hpWidth = 100.0 / resolution
     val cooldownWidth = generator.physicsParameters.agent.cooldown / resolution
     val speedWidth = generator.physicsParameters.bullet.maxSpeed / resolution
-    val ownerWidth = 2.0
 
     val widths = mutableListOf(xWidth, yWidth, angleWidth, hpWidth, cooldownWidth)
     for (i in 1..(2 * BattleState.BULLETS_COUNT)) {
-        widths.addAll(listOf(xWidth, yWidth, speedWidth, speedWidth, ownerWidth))
+        widths.addAll(listOf(xWidth, yWidth, speedWidth, speedWidth))
     }
 
     val tilecoding = TileCodingFeatures(inputFeatures)
@@ -54,19 +53,20 @@ fun main(args: Array<String>) {
     val stateGenerator = CyclicStateGenerator().addState(initState)
     val environment = SimulatedEnvironment(domain, stateGenerator)
 
-    setupExplorer(domain, environment, visualizer)
+    //setupExplorer(domain, environment, visualizer)
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
     val episodes = ArrayList<Episode>()
+    //environment.addObservers(observer)
 
-    for (i in 0..10000) {
+    for (i in 0..20000) {
         val episode = agent.runLearningEpisode(environment)
-        println(i.toString() + ": " + episode.maxTimeStep())
+        println("%d: steps count = %d, reward = %f".format(i, episode.maxTimeStep(), episode.rewardSequence.sum()))
         environment.resetEnvironment()
 
-        if (i == 9000) {
+        if (i == 1000) {
             environment.addObservers(observer)
         }
     }

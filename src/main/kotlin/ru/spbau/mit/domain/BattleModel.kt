@@ -22,7 +22,8 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         val newState = state.copy() as BattleState
         val agent = newState.touchAgent()
         val enemy = newState.touchEnemy()
-        val bullets = newState.touchAgentBullets()
+        val agentBullets = newState.touchAgentBullets()
+        val enemyBullets = newState.touchEnemyBullets()
 
         performAction(agent, action.actionName(), newState)
         performAction(enemy, bot.nextAction(state, physicsParameters), newState)
@@ -30,8 +31,8 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         agent.cooldown = Math.max(0, agent.cooldown - 1)
         enemy.cooldown = Math.max(0, enemy.cooldown - 1)
 
-        processBullets(bullets, agent, enemy)
-        // TODO: process enemy bullets
+        processBullets(agentBullets, enemy)
+        processBullets(enemyBullets, agent)
 
         return newState
     }
@@ -71,9 +72,8 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         val speedY = Math.sin(agent.angle) * physicsParameters.bullet.speed
         val accelerationX = Math.cos(agent.angle) * physicsParameters.bullet.acceleration
         val accelerationY = Math.sin(agent.angle) * physicsParameters.bullet.acceleration
-        val enemy = agent.className() == BattleAgent.CLASS_ENEMY
 
-        val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, enemy, "bullet")
+        val bullet = BattleBullet(agent.x, agent.y, speedX, speedY, accelerationX, accelerationY, physicsParameters.bullet.damage, "bullet")
         addBullet(bullets, bullet)
     }
 
@@ -122,7 +122,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
      * @param agent agent
      * @param enemy enemy agent
      */
-    private fun processBullets(bullets: MutableList<BattleBullet>, agent: BattleAgent, enemy: BattleAgent) {
+    private fun processBullets(bullets: MutableList<BattleBullet>, agent: BattleAgent) {
         bullets.removeIf {
             if (it.isEmpty()) {
                 return@removeIf true
@@ -138,12 +138,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
 
             val trajectory = Line2D.Double(it.x, it.y, it.x + it.speedX, it.y + it.speedY)
 
-            if (!it.enemy && hitsTarget(trajectory, Point2D.Double(enemy.x, enemy.y))) {
-                enemy.hp = Math.max(0, enemy.hp - it.damage)
-                return@removeIf true
-            }
-
-            if (it.enemy && hitsTarget(trajectory, Point2D.Double(agent.x, agent.y))) {
+            if (hitsTarget(trajectory, Point2D.Double(agent.x, agent.y))) {
                 agent.hp = Math.max(0, agent.hp - it.damage)
                 return@removeIf true
             }

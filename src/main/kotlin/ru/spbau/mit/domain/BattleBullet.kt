@@ -15,10 +15,9 @@ class BattleBullet(var x: Double,
                    var accelerationX: Double,
                    var accelerationY: Double,
                    var damage: Int,
-                   var enemy: Boolean,
                    var name: String) : ObjectInstance, State, Comparable<BattleBullet> {
 
-    constructor(): this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, false, "empty")
+    constructor(): this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, "empty")
 
     companion object {
         val CLASS: String = "CLASS_BULLET"
@@ -34,10 +33,9 @@ class BattleBullet(var x: Double,
             val Y: String = "Y"
             val SPEED_X: String = "SPEED_X"
             val SPEED_Y: String = "SPEED_Y"
-            val ENEMY: String = "ENEMY"
         }
 
-        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.SPEED_X, Var.SPEED_Y, Var.ENEMY)
+        val keys = mutableListOf<Any>(Var.X, Var.Y, Var.SPEED_X, Var.SPEED_Y)
     }
 
     fun isEmpty(): Boolean = speedX == 0.0 && speedY == 0.0
@@ -48,7 +46,6 @@ class BattleBullet(var x: Double,
             Var.Y               -> y
             Var.SPEED_X         -> speedX
             Var.SPEED_Y         -> speedY
-            Var.ENEMY           -> if (enemy) 1.0 else 0.0
             else                -> throw UnknownKeyException(variableKey)
         }
     }
@@ -59,10 +56,10 @@ class BattleBullet(var x: Double,
 
     override fun name(): String = name
 
-    override fun copy(): BattleBullet = BattleBullet(x, y, speedX, speedY, accelerationX, accelerationY, damage, enemy, name)
+    override fun copy(): BattleBullet = BattleBullet(x, y, speedX, speedY, accelerationX, accelerationY, damage, name)
 
     override fun copyWithName(objectName: String?): ObjectInstance {
-        return BattleBullet(x, y, speedX, speedY, accelerationX, accelerationY, damage, enemy, objectName!!)
+        return BattleBullet(x, y, speedX, speedY, accelerationX, accelerationY, damage, objectName!!)
     }
 
     override fun toString(): String = StateUtilities.stateToString(this)
