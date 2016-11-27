@@ -3,12 +3,10 @@ package ru.spbau.mit.domain
 import burlap.mdp.auxiliary.DomainGenerator
 import burlap.mdp.core.Domain
 import burlap.mdp.core.action.UniversalActionType
-import burlap.mdp.core.oo.OODomain
-import burlap.mdp.core.oo.propositional.PropositionalFunction
-import burlap.mdp.core.oo.state.OOState
 import burlap.mdp.singleagent.model.FactoredModel
 import burlap.mdp.singleagent.oo.OOSADomain
-import ru.spbau.mit.bot.BattleBotEmpty
+import ru.spbau.mit.bot.BattleCyclicBot
+import ru.spbau.mit.bot.BattleEmptyBot
 
 class BattleDomain : DomainGenerator {
     val physicsParameters: BattlePhysicsParameters = BattlePhysicsParameters()
@@ -29,7 +27,11 @@ class BattleDomain : DomainGenerator {
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.SKIP))
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.SHOOT))
 
-        val battleStateModel = BattleModel(physicsParameters, BattleBotEmpty())
+        val bot = BattleCyclicBot()
+                .addAction(BattleAgent.Companion.Action.GO_RIGHT, 20)
+                .addAction(BattleAgent.Companion.Action.GO_LEFT, 20)
+
+        val battleStateModel = BattleModel(physicsParameters, bot)
 
         val rewardFunction = BattleRewardFunction()
         val terminalFunction = BattleTerminalFunction()

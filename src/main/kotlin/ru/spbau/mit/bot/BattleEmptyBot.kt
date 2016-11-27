@@ -7,7 +7,7 @@ import ru.spbau.mit.domain.BattlePhysicsParameters
 /**
  * Simple bot which doesn't do anything
  */
-class BattleBotEmpty : BattleBot {
+class BattleEmptyBot : BattleBot {
     override fun nextAction(state: State, physicsParameters: BattlePhysicsParameters): String {
         return BattleAgent.Companion.Action.SKIP
     }

@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
     val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
-            BattleEnemy(220.0, 180.0, 0.0, 100, 0, "enemy"))
+            BattleEnemy(220.0, 180.0, -Math.PI / 2.0, 100, 0, "enemy"))
 
     val inputFeatures = ConcatenatedObjectFeatures()
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
         println("%d: steps count = %d, reward = %f".format(i, episode.maxTimeStep(), episode.rewardSequence.sum()))
         environment.resetEnvironment()
 
-        if (i == 1000) {
+        if (i == 15000) {
             environment.addObservers(observer)
         }
     }
