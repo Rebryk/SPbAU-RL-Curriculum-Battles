@@ -28,12 +28,18 @@ class BattleDomain : DomainGenerator {
                 .addActionType(UniversalActionType(BattleAgent.Companion.Action.SHOOT))
 
         val bot = BattleCyclicBot()
+                /*
+                .addAction(BattleAgent.Companion.Action.SHOOT)
                 .addAction(BattleAgent.Companion.Action.GO_RIGHT, 20)
-                .addAction(BattleAgent.Companion.Action.GO_LEFT, 20)
+                .addAction(BattleAgent.Companion.Action.TURN_RIGHT, 4)
+                .addAction(BattleAgent.Companion.Action.SHOOT)
+                .addAction(BattleAgent.Companion.Action.TURN_LEFT, 4)
+                .addAction(BattleAgent.Companion.Action.GO_LEFT, 20)*/
+
 
         val battleStateModel = BattleModel(physicsParameters, bot)
 
-        val rewardFunction = BattleRewardFunction()
+        val rewardFunction = BattleRewardFunction(physicsParameters)
         val terminalFunction = BattleTerminalFunction()
 
         domain.model = FactoredModel(battleStateModel, rewardFunction, terminalFunction)

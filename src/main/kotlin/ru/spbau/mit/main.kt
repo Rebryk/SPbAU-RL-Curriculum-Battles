@@ -14,11 +14,11 @@ import burlap.shell.visual.VisualExplorer
 import burlap.visualizer.Visualizer
 import ru.spbau.mit.domain.*
 import ru.spbau.mit.visualization.BattleVisualizer
-import java.util.*
 
 fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
+
     val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
             BattleEnemy(220.0, 180.0, -Math.PI / 2.0, 100, 0, "enemy"))
 
@@ -53,25 +53,29 @@ fun main(args: Array<String>) {
     val stateGenerator = CyclicStateGenerator().addState(initState)
     val environment = SimulatedEnvironment(domain, stateGenerator)
 
-    //setupExplorer(domain, environment, visualizer)
+    // uncomment to use keyboard control
+    // setupExplorer(domain, environment, visualizer)
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
-    val episodes = ArrayList<Episode>()
-    //environment.addObservers(observer)
+    environment.addObservers(observer)
 
-    for (i in 0..20000) {
+    for (i in 0..2) {
         val episode = agent.runLearningEpisode(environment)
         println("%d: steps count = %d, reward = %f".format(i, episode.maxTimeStep(), episode.rewardSequence.sum()))
-        environment.resetEnvironment()
 
-        if (i == 15000) {
-            environment.addObservers(observer)
-        }
+        // call to save episode
+        // saveEpisode(i)
+
+        environment.resetEnvironment()
     }
 
-    EpisodeSequenceVisualizer(visualizer, domain, episodes)
+    EpisodeSequenceVisualizer(visualizer, domain, "episodes/")
+}
+
+fun saveEpisode(episode: Episode, index: Int) {
+    episode.write("episodes/battle_$index")
 }
 
 fun setupExplorer(domain: OOSADomain, environment: SimulatedEnvironment, visualizer: Visualizer) {

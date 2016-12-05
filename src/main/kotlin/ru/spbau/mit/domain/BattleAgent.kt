@@ -14,6 +14,8 @@ open class BattleAgent(var x: Double,
                        var cooldown: Int,
                        var name: String): ObjectInstance, State {
 
+    constructor(): this(0.0, 0.0, 0.0, 0, 0, "")
+
     companion object {
         val CLASS: String = "CLASS_AGENT"
         val CLASS_ENEMY: String = "CLASS_ENEMY"

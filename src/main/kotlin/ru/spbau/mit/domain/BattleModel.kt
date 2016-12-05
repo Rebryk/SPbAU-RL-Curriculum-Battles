@@ -163,7 +163,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
     }
 
     private fun intersectsWall(vector: Line2D): Boolean {
-        return physicsParameters.walls.filter { it.intersects(vector) }.isNotEmpty()
+        return physicsParameters.walls.filter { vector.intersects(it) }.isNotEmpty()
     }
 
     private fun hitsTarget(vector: Line2D, target: Point2D.Double): Boolean  {

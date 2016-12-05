@@ -7,7 +7,6 @@ import burlap.mdp.core.oo.state.exceptions.UnknownClassException
 import burlap.mdp.core.oo.state.exceptions.UnknownObjectException
 import burlap.mdp.core.state.State
 import burlap.mdp.core.state.annotations.ShallowCopyState
-import java.util.*
 
 
 @ShallowCopyState
@@ -15,6 +14,8 @@ class BattleState(var agent: BattleAgent,
                   var enemy: BattleEnemy,
                   var agentBullets: MutableList<BattleBullet> = mutableListOf(),
                   var enemyBullets: MutableList<BattleBullet> = mutableListOf()) : OOState {
+
+    constructor() : this(BattleAgent(), BattleEnemy())
 
     init {
         while (agentBullets.size < BULLETS_COUNT) {
@@ -32,13 +33,13 @@ class BattleState(var agent: BattleAgent,
 
     override fun numObjects(): Int = 2 * (BULLETS_COUNT + 1)
 
-    override fun `object`(objectName: String?): ObjectInstance {
-        return when (objectName.toString()) {
+    override fun `object`(objectName: String): ObjectInstance {
+        return when (objectName) {
             agent.name -> agent
             enemy.name -> enemy
             else -> {
-                getBullet(agentBullets, objectName.toString())?.let { return it }
-                getBullet(enemyBullets, objectName.toString())?.let { return it }
+                getBullet(agentBullets, objectName)?.let { return it }
+                getBullet(enemyBullets, objectName)?.let { return it }
                 throw UnknownObjectException(objectName)
             }
         }
@@ -66,12 +67,12 @@ class BattleState(var agent: BattleAgent,
     override fun toString(): String = OOStateUtilities.ooStateToString(this)
 
     fun touchAgentBullets(): MutableList<BattleBullet> {
-        agentBullets = ArrayList<BattleBullet>(agentBullets)
+        agentBullets = agentBullets.map { it.copy() }.toMutableList()
         return agentBullets
     }
 
     fun touchEnemyBullets(): MutableList<BattleBullet> {
-        enemyBullets = ArrayList<BattleBullet>(enemyBullets)
+        enemyBullets = enemyBullets.map { it.copy() }.toMutableList()
         return enemyBullets
     }
 
