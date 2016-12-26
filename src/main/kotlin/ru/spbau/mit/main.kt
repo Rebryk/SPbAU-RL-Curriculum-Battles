@@ -59,14 +59,13 @@ fun main(args: Array<String>) {
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
-    environment.addObservers(observer)
 
-    for (i in 0..2) {
+    for (i in 0..5010) {
         val episode = agent.runLearningEpisode(environment)
         println("%d: steps count = %d, reward = %f".format(i, episode.maxTimeStep(), episode.rewardSequence.sum()))
 
         // call to save episode
-        // saveEpisode(i)
+        // saveEpisode(episode, i)
 
         environment.resetEnvironment()
     }

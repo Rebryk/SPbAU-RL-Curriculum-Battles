@@ -5,6 +5,8 @@ import burlap.mdp.core.state.State
 import burlap.mdp.singleagent.model.RewardFunction
 import java.awt.geom.Line2D
 import java.awt.geom.Point2D
+import java.awt.geom.Rectangle2D
+import java.util.*
 
 class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : RewardFunction {
     companion object {
@@ -16,7 +18,7 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
          */
         private val DEFAULT_REWARD: Double = -2.0
         private val ANGLE_DELTA_REWARD: Double = 100.0 / Math.PI
-        private val DISTANCE_DELTA_REWARD: Double = 1.0
+        private val DISTANCE_DELTA_REWARD: Double = 0.6
         private val ENEMY_IS_DEAD_REWARD: Double = 1000.0
         private val ENEMY_INJURED_REWARD: Double = 200.0
         private val AGENT_INJURED_REWARD: Double = -100.0
@@ -24,6 +26,14 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
         private val USELESS_SHOT_REWARD: Double = -50.0
         private val TOUCHING_OBSTACLE_REWARD: Double = -50.0
         private val MOVING_TO_WALL_REWARD: Double = -50.0
+
+        private val CELL_SIZE: Double = 5.0
+    }
+
+    val maps: Array<Array<Map>>
+
+    init {
+        maps = findDistances()
     }
 
     override fun reward(state: State?, action: Action?, newState: State?): Double {
@@ -144,10 +154,112 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
         return physicsParameters.walls.map { it.getDistanceTo(point) }.min() ?: Double.MAX_VALUE
     }
 
-    // TODO: replace with BFS
-    private fun getDistanceToEnemy(state: BattleState, cellSize: Double = 10.0): Double {
-        val agentCell = Pair((state.agent.x / cellSize).toInt(), (state.agent.y / cellSize).toInt())
-        val enemyCell = Pair((state.enemy.x / cellSize).toInt(), (state.enemy.y / cellSize).toInt())
-        return cellSize * Math.abs(agentCell.first - enemyCell.first) + cellSize * Math.abs(agentCell.second - enemyCell.second)
+    /**
+     * Keeps distance from one cell to all other
+     */
+    class Map(val width: Int, val height: Int) {
+        val distance = (0..width).map { (0..height).map { Int.MAX_VALUE }.toMutableList() }.toMutableList()
+        val previous = (0..width).map { (0..height).map { Pair(-1, -1) }.toMutableList() }.toMutableList()
+    }
+
+    private fun bfs(from: Pair<Int, Int>, map: Map, wall: List<BooleanArray>) {
+        val queue = LinkedList<Pair<Int, Int>>()
+
+        map.distance[from.first][from.second] = 0
+        queue.add(from)
+
+        val next = arrayOf(Pair(1, 0), Pair(0, 1), Pair(-1, 0), Pair(0, -1))
+
+        while (queue.isNotEmpty()) {
+            val cell = queue.pop()
+
+            next.forEach {
+                val nextCell = Pair(cell.first + it.first, cell.second + it.second)
+
+                if (nextCell.first < 0 || nextCell.first > map.width || nextCell.second < 0 || nextCell.second > map.height) {
+                    return@forEach
+                }
+
+                if (wall[nextCell.first][nextCell.second]) {
+                    return@forEach
+                }
+
+                if (map.distance[nextCell.first][nextCell.second] == Int.MAX_VALUE) {
+                    map.distance[nextCell.first][nextCell.second] = map.distance[cell.first][cell.second] + 1
+                    map.previous[nextCell.first][nextCell.second] = cell
+                    queue.add(nextCell)
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculates all distances
+     */
+    private fun findDistances(): Array<Array<Map>> {
+        /**
+         * @param x x-coordinate of cell
+         * @param y y-coordinate of cell
+         * @return rectangle which represents the given cell
+         */
+        fun getCell(x: Int, y: Int): Rectangle2D.Double = Rectangle2D.Double(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+        /**
+         * @param x x-coordinate of cell
+         * @param y y-coordinate of cell
+         * @return true if the given cell intersects some wall, false otherwise
+         */
+        fun isWall(x: Int, y: Int): Boolean = physicsParameters.walls.filter { it.intersects(getCell(x, y)) }.isNotEmpty()
+
+        val width = Math.ceil(physicsParameters.width / CELL_SIZE).toInt() + 1
+        val height = Math.ceil(physicsParameters.height / CELL_SIZE).toInt() + 1
+
+        val wall = (0..width).map { x -> (0..height).map { y -> isWall(x, y) }.toBooleanArray() }
+
+        return Array(width, { x ->
+            Array(height, { y ->
+                val map = Map(width, height)
+                bfs(Pair(x, y), map, wall)
+                map
+            })
+        })
+    }
+
+    private fun getDistanceToEnemy(state: BattleState): Double {
+        /**
+         * @param x x-coordinate of cell
+         * @param y y-coordinate of cell
+         * @return rectangle which represents the given cell
+         */
+        fun getCell(x: Int, y: Int): Rectangle2D.Double = Rectangle2D.Double(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+
+        val agentCell = Pair((state.agent.x / CELL_SIZE).toInt(), (state.agent.y / CELL_SIZE).toInt())
+        val enemyCell = Pair((state.enemy.x / CELL_SIZE).toInt(), (state.enemy.y / CELL_SIZE).toInt())
+        val distance = maps[agentCell.first][agentCell.second].distance
+        val previous = maps[agentCell.first][agentCell.second].previous
+
+        /**
+         * Returns Double.MAX_VALUE if there is no way to get the enemy
+         */
+        if (distance[enemyCell.first][enemyCell.second] == Int.MAX_VALUE) {
+            return Double.MAX_VALUE
+        }
+
+        /**
+         * Finds the second cell in the path from the agent cell to the enemy cell
+         */
+        var end = enemyCell
+
+        if (end != agentCell) {
+            while (previous[end.first][end.second] != agentCell) {
+                end = previous[end.first][end.second]
+            }
+        }
+
+        val endCell = getCell(end.first, end.second)
+        val extraDistance = Point2D.Double(state.agent.x, state.agent.y).distance(endCell.centerX, endCell.centerY)
+
+        return (distance[enemyCell.first][enemyCell.second] - 1) * CELL_SIZE + extraDistance
     }
 }

@@ -100,7 +100,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
     }
 
     private fun addBullet(bullets: MutableList<BattleBullet>, bullet: BattleBullet) {
-        bullets.removeIf { it.isEmpty() }
+        bullets.removeIf{ it.isEmpty() }
 
         // TODO: implement replacement strategy
         if (bullets.size == BattleState.BULLETS_COUNT) {
