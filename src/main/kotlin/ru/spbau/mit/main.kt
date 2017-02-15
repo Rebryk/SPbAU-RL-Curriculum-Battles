@@ -14,20 +14,26 @@ import burlap.shell.visual.VisualExplorer
 import burlap.visualizer.Visualizer
 import ru.spbau.mit.domain.*
 import ru.spbau.mit.visualization.BattleVisualizer
+import burlap.behavior.singleagent.auxiliary.performance.PerformanceMetric
+import burlap.behavior.singleagent.auxiliary.performance.TrialMode
+import burlap.behavior.singleagent.auxiliary.performance.LearningAlgorithmExperimenter
+import burlap.behavior.singleagent.learning.LearningAgentFactory
+import burlap.mdp.singleagent.environment.Environment
+
 
 fun main(args: Array<String>) {
     val generator = BattleDomain()
     val domain = generator.generateDomain() as OOSADomain
 
-    val initState = BattleState(BattleAgent(20.0, 20.0, 0.0, 100, 0, "agent"),
-            BattleEnemy(220.0, 180.0, -Math.PI / 2.0, 100, 0, "enemy"))
+    val initState = BattleState(BattleAgent(5.0, 5.0, 0.0, 100, 0, "agent"),
+            BattleEnemy(37.0, 27.0, -Math.PI / 2.0, 100, 0, "enemy"))
 
     val inputFeatures = ConcatenatedObjectFeatures()
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
             .addObjectVectorizion(BattleBullet.CLASS, NumericVariableFeatures())
 
     val nTilings = 4
-    val resolution = 20.0
+    val resolution = 12.0
 
     val xWidth = generator.physicsParameters.width / resolution
     val yWidth = generator.physicsParameters.height / resolution
@@ -53,16 +59,23 @@ fun main(args: Array<String>) {
     val stateGenerator = CyclicStateGenerator().addState(initState)
     val environment = SimulatedEnvironment(domain, stateGenerator)
 
+    // uncomment to run experiment
+    // experiment(environment, BattleAgentFactory(domain, vfa))
+
     // uncomment to use keyboard control
     // setupExplorer(domain, environment, visualizer)
 
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
+    // uncomment to visualize learning
+    // environment.addObservers(observer)
 
-    for (i in 0..5010) {
-        val episode = agent.runLearningEpisode(environment)
-        println("%d: steps count = %d, reward = %f".format(i, episode.maxTimeStep(), episode.rewardSequence.sum()))
+    for (i in 0..3000) {
+        val episode = agent.runLearningEpisode(environment, 1000)
+
+        val reward = episode.rewardSequence.sum()
+        println("$i: steps count = ${episode.maxTimeStep()}, reward = %f".format(reward))
 
         // call to save episode
         // saveEpisode(episode, i)
@@ -71,6 +84,18 @@ fun main(args: Array<String>) {
     }
 
     EpisodeSequenceVisualizer(visualizer, domain, "episodes/")
+}
+
+fun experiment(environment: Environment, factory: LearningAgentFactory) {
+    val exp = LearningAlgorithmExperimenter(environment, 5, 1500, factory)
+
+    exp.setUpPlottingConfiguration(500, 250, 2, 1000,
+            TrialMode.MOST_RECENT_AND_AVERAGE,
+            PerformanceMetric.CUMULATIVE_STEPS_PER_EPISODE,
+            PerformanceMetric.AVERAGE_EPISODE_REWARD)
+
+    exp.startExperiment()
+    exp.writeStepAndEpisodeDataToCSV("expData")
 }
 
 fun saveEpisode(episode: Episode, index: Int) {

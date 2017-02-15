@@ -11,23 +11,23 @@ import java.util.*
 class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : RewardFunction {
     companion object {
         private val SHOT_MAX_DELTA_ANGLE: Double = Math.PI / 12.0
-        private val MIN_DISTANCE_TO_OBSTACLE: Double = 15.0
+        private val MIN_DISTANCE_TO_OBSTACLE: Double = 4.0
 
         /**
          * Reward for different actions
          */
-        private val DEFAULT_REWARD: Double = -2.0
-        private val ANGLE_DELTA_REWARD: Double = 100.0 / Math.PI
-        private val DISTANCE_DELTA_REWARD: Double = 0.6
-        private val ENEMY_IS_DEAD_REWARD: Double = 1000.0
-        private val ENEMY_INJURED_REWARD: Double = 200.0
-        private val AGENT_INJURED_REWARD: Double = -100.0
-        private val INACCURATE_SHOT_REWARD: Double = -50.0
-        private val USELESS_SHOT_REWARD: Double = -50.0
-        private val TOUCHING_OBSTACLE_REWARD: Double = -50.0
-        private val MOVING_TO_WALL_REWARD: Double = -50.0
+        private val DEFAULT_REWARD: Double = -6.0
+        private val ANGLE_DELTA_REWARD: Double = 1400.0 / Math.PI
+        private val DISTANCE_DELTA_REWARD: Double = 0.8
+        private val ENEMY_IS_DEAD_REWARD: Double = 5000.0
+        private val ENEMY_INJURED_REWARD: Double = 2000.0
+        private val AGENT_INJURED_REWARD: Double = -300.0
+        private val INACCURATE_SHOT_REWARD: Double = -100.0
+        private val USELESS_SHOT_REWARD: Double = -200.0
+        private val TOUCHING_OBSTACLE_REWARD: Double = -100.0
+        private val MOVING_TO_WALL_REWARD: Double = -150.0
 
-        private val CELL_SIZE: Double = 5.0
+        private val CELL_SIZE: Double = 2.0
     }
 
     val maps: Array<Array<Map>>
@@ -73,7 +73,6 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
             reward += INACCURATE_SHOT_REWARD
         }
 
-
         if (BattleAgent.Companion.Action.isShooting(action.actionName()) && isUselessShot(newState)) {
             reward += USELESS_SHOT_REWARD
         }
@@ -87,7 +86,12 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
         }
 
         reward -= getAngleDelta(state, newState) * ANGLE_DELTA_REWARD
-        reward -= getDistanceDelta(state, newState) * DISTANCE_DELTA_REWARD
+
+        // TODO: fix this bug
+        val distanceDelta = getDistanceDelta(state, newState)
+        if (Math.abs(distanceDelta) < 1000) {
+            reward -= distanceDelta * DISTANCE_DELTA_REWARD
+        }
 
         return reward
     }
@@ -209,7 +213,7 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
          * @param y y-coordinate of cell
          * @return true if the given cell intersects some wall, false otherwise
          */
-        fun isWall(x: Int, y: Int): Boolean = physicsParameters.walls.filter { it.intersects(getCell(x, y)) }.isNotEmpty()
+        fun isWall(x: Int, y: Int): Boolean = physicsParameters.walls.filter { it.contains(getCell(x, y)) }.isNotEmpty()
 
         val width = Math.ceil(physicsParameters.width / CELL_SIZE).toInt() + 1
         val height = Math.ceil(physicsParameters.height / CELL_SIZE).toInt() + 1

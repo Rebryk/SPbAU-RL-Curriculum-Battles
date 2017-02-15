@@ -14,7 +14,7 @@ import java.awt.geom.Path2D
  */
 open class BattleAgentPainter(private val physicsParameters: BattlePhysicsParameters,
                          private val color: Color = Color.BLUE,
-                         private val radius: Int = 30) : ObjectPainter {
+                         private val radius: Int = 25) : ObjectPainter {
 
     override fun paintObject(g2: Graphics2D?, state: OOState?, obj: ObjectInstance?, cWidth: Float, cHeight: Float) {
         if (g2 == null) {
