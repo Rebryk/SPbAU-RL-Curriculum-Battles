@@ -10,10 +10,25 @@ import java.awt.geom.Point2D
 import java.awt.geom.Rectangle2D
 import java.util.*
 
-class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: BattleBot) : FullStateModel {
-    private val EPS = 0.001
-    private val SKIP_ACTION_PROBABILITY = 0.10
-    private val RANDOM_ACTION_PROBABILITY: Double = 0.01
+class BattleModel(val physicsParameters: BattlePhysicsParameters,
+                  val bot: BattleBot,
+                  val flexibleMode: Boolean = false,
+                  val totalStepsCount: Int = 0) : FullStateModel {
+
+    private val SKIP_ACTION_PROBABILITY: Double
+    get() {
+        if (flexibleMode) {
+            val range = totalStepsCount - 200
+
+            if (step <= range) {
+                return 50 * (0.3 / range) * ((range - step + 1) / 50)
+            }
+        }
+
+        return 0.00
+    }
+
+    private val RANDOM_ACTION_PROBABILITY: Double = 0.03
     private val RANDOM_ACTIONS = listOf(
             BattleAgent.Companion.Action.GO_FORWARD,
             BattleAgent.Companion.Action.GO_BACKWARD,
@@ -21,6 +36,18 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
             BattleAgent.Companion.Action.GO_RIGHT)
     private val BOT_ACTION_PROBABILITY = 1.0 - RANDOM_ACTIONS.size * RANDOM_ACTION_PROBABILITY - SKIP_ACTION_PROBABILITY
 
+    private var episode: Int = 0
+    private var step: Int = 0
+
+
+    fun nextEpisode() {
+        ++episode
+        step = 0
+    }
+
+    fun nextStep() {
+        ++step
+    }
 
     // Deterministic variant
     /*
@@ -38,22 +65,14 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
             throw RuntimeException("State is not BattleState!")
         }
 
-        var skipProbability = SKIP_ACTION_PROBABILITY
-        val states = mutableListOf<StateTransitionProb>()
+        val states = mutableListOf(
+                StateTransitionProb(state, SKIP_ACTION_PROBABILITY),
+                StateTransitionProb(sample(state, action, bot.nextAction(state, physicsParameters)), BOT_ACTION_PROBABILITY)
+        )
 
         RANDOM_ACTIONS.forEach {
-            val newState = sample(state, action, it) as BattleState
-
-            if (Math.abs(newState.enemy.x - state.enemy.x) < EPS && Math.abs(newState.enemy.y - state.enemy.y) < EPS) {
-                skipProbability += RANDOM_ACTION_PROBABILITY
-            } else {
-                states.add(StateTransitionProb(newState, RANDOM_ACTION_PROBABILITY))
-            }
+            states.add(StateTransitionProb(sample(state, action, it), RANDOM_ACTION_PROBABILITY))
         }
-
-        states.add(StateTransitionProb(state, skipProbability))
-
-        states.add(StateTransitionProb(sample(state, action, bot.nextAction(state, physicsParameters)), BOT_ACTION_PROBABILITY))
 
         return states
     }
@@ -87,19 +106,15 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters, val bot: Battl
         }
 
         val probability = Math.random()
-        if (probability < SKIP_ACTION_PROBABILITY) {
-            return state
+
+        val randomActionProbability = RANDOM_ACTIONS.size * RANDOM_ACTION_PROBABILITY
+        if (probability < randomActionProbability) {
+            val randomActionName = RANDOM_ACTIONS[Random().nextInt(RANDOM_ACTIONS.size)]
+            return sample(state, action, randomActionName) as BattleState
         }
 
-        if (probability < 1.0 - BOT_ACTION_PROBABILITY) {
-            val randomActionName = RANDOM_ACTIONS[Random().nextInt(RANDOM_ACTIONS.size)]
-            val newState = sample(state, action, randomActionName) as BattleState
-
-            if (Math.abs(newState.enemy.x - state.enemy.x) < EPS && Math.abs(newState.enemy.y - state.enemy.y) < EPS) {
-                return state
-            }
-
-            return newState
+        if (probability < randomActionProbability + SKIP_ACTION_PROBABILITY) {
+            return sample(state, action, BattleAgent.Companion.Action.SKIP)
         }
 
         return sample(state, action, bot.nextAction(state, physicsParameters))

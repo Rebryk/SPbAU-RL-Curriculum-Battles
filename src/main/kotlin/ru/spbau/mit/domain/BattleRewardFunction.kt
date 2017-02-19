@@ -16,16 +16,16 @@ class BattleRewardFunction(val physicsParameters: BattlePhysicsParameters) : Rew
         /**
          * Reward for different actions
          */
-        private val DEFAULT_REWARD: Double = -6.0
-        private val ANGLE_DELTA_REWARD: Double = 1400.0 / Math.PI
-        private val DISTANCE_DELTA_REWARD: Double = 0.8
-        private val ENEMY_IS_DEAD_REWARD: Double = 5000.0
-        private val ENEMY_INJURED_REWARD: Double = 2000.0
-        private val AGENT_INJURED_REWARD: Double = -300.0
-        private val INACCURATE_SHOT_REWARD: Double = -100.0
-        private val USELESS_SHOT_REWARD: Double = -200.0
-        private val TOUCHING_OBSTACLE_REWARD: Double = -100.0
-        private val MOVING_TO_WALL_REWARD: Double = -150.0
+        private val DEFAULT_REWARD: Double = -0.4
+        private val ANGLE_DELTA_REWARD: Double = 200.0 / Math.PI
+        private val DISTANCE_DELTA_REWARD: Double = 0.08
+        private val ENEMY_IS_DEAD_REWARD: Double = 500.0
+        private val ENEMY_INJURED_REWARD: Double = 220.0
+        private val AGENT_INJURED_REWARD: Double = -30.0
+        private val INACCURATE_SHOT_REWARD: Double = -10.0
+        private val USELESS_SHOT_REWARD: Double = -20.0
+        private val TOUCHING_OBSTACLE_REWARD: Double = -10.0
+        private val MOVING_TO_WALL_REWARD: Double = -10.0
 
         private val CELL_SIZE: Double = 2.0
     }

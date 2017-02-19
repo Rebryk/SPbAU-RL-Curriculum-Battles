@@ -19,6 +19,7 @@ import burlap.behavior.singleagent.auxiliary.performance.TrialMode
 import burlap.behavior.singleagent.auxiliary.performance.LearningAlgorithmExperimenter
 import burlap.behavior.singleagent.learning.LearningAgentFactory
 import burlap.mdp.singleagent.environment.Environment
+import burlap.mdp.singleagent.model.FactoredModel
 
 
 fun main(args: Array<String>) {
@@ -33,7 +34,7 @@ fun main(args: Array<String>) {
             .addObjectVectorizion(BattleBullet.CLASS, NumericVariableFeatures())
 
     val nTilings = 4
-    val resolution = 12.0
+    val resolution = 10.0
 
     val xWidth = generator.physicsParameters.width / resolution
     val yWidth = generator.physicsParameters.height / resolution
@@ -56,7 +57,7 @@ fun main(args: Array<String>) {
 
     val visualizer = BattleVisualizer.getVisualizer(generator.physicsParameters)
 
-    val stateGenerator = CyclicStateGenerator().addState(initState)
+    val stateGenerator = CyclicStateGenerator((domain.model as FactoredModel).stateModel as BattleModel).addState(initState)
     val environment = SimulatedEnvironment(domain, stateGenerator)
 
     // uncomment to run experiment
@@ -65,13 +66,15 @@ fun main(args: Array<String>) {
     // uncomment to use keyboard control
     // setupExplorer(domain, environment, visualizer)
 
+
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
     // uncomment to visualize learning
     // environment.addObservers(observer)
 
-    for (i in 0..3000) {
+
+    for (i in 0..2000) {
         val episode = agent.runLearningEpisode(environment, 1000)
 
         val reward = episode.rewardSequence.sum()
@@ -87,12 +90,13 @@ fun main(args: Array<String>) {
 }
 
 fun experiment(environment: Environment, factory: LearningAgentFactory) {
-    val exp = LearningAlgorithmExperimenter(environment, 5, 1500, factory)
+    val exp = LearningAlgorithmExperimenter(environment, 3, 1500, factory)
 
-    exp.setUpPlottingConfiguration(500, 250, 2, 1000,
+    exp.setUpPlottingConfiguration(400, 200, 2, 1000,
             TrialMode.MOST_RECENT_AND_AVERAGE,
-            PerformanceMetric.CUMULATIVE_STEPS_PER_EPISODE,
-            PerformanceMetric.AVERAGE_EPISODE_REWARD)
+            PerformanceMetric.AVERAGE_EPISODE_REWARD,
+            PerformanceMetric.STEPS_PER_EPISODE,
+            PerformanceMetric.CUMULATIVE_REWARD_PER_EPISODE)
 
     exp.startExperiment()
     exp.writeStepAndEpisodeDataToCSV("expData")

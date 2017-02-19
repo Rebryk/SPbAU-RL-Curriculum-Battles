@@ -12,9 +12,9 @@ import java.awt.geom.Point2D
 
 class BattleGreedyBot : BattleBot {
     companion object {
-        private const val MIN_ANGLE_DELTA = Math.PI / 12 + Math.PI / 50
+        private const val MIN_ANGLE_DELTA = Math.PI / 12 + Math.PI / 80
         private const val VIEW_RANGE = 100
-        private const val BULLET_VIEW_DISTANCE = 6
+        private const val BULLET_VIEW_DISTANCE = 7
     }
 
     private fun getBulletTrajectory(bullet: BattleBullet): Line2D.Double {
