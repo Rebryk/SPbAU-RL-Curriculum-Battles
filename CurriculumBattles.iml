@@ -10,8 +10,6 @@
                 <option name="additionalArguments" value="-version" />
                 <option name="copyJsLibraryFiles" value="true" />
                 <option name="outputDirectoryForJsLibraryFiles" value="lib" />
-                <option name="scriptTemplates" value="" />
-                <option name="scriptTemplatesClasspath" value="" />
               </CompilerSettings>
             </option>
             <option name="k2jsCompilerArguments">
@@ -37,11 +35,6 @@
                 <option name="noInline" value="false" />
                 <option name="repeat" />
                 <option name="pluginClasspaths" />
-                <option name="multiPlatform" value="false" />
-                <option name="noCheckImpl" value="false" />
-                <option name="coroutinesWarn" value="false" />
-                <option name="coroutinesError" value="false" />
-                <option name="coroutinesEnable" value="false" />
                 <option name="pluginOptions" />
                 <option name="freeArgs">
                   <list />
@@ -65,11 +58,6 @@
                 <option name="pluginClasspaths">
                   <array />
                 </option>
-                <option name="multiPlatform" value="false" />
-                <option name="noCheckImpl" value="false" />
-                <option name="coroutinesWarn" value="true" />
-                <option name="coroutinesError" value="false" />
-                <option name="coroutinesEnable" value="false" />
                 <option name="pluginOptions">
                   <array />
                 </option>
@@ -86,7 +74,7 @@
         <option name="versionInfo">
           <KotlinVersionInfo>
             <option name="apiLevel" value="1.0" />
-            <option name="languageLevel" value="1.1" />
+            <option name="languageLevel" value="1.0" />
             <option name="targetPlatformName" value="JVM 1.6" />
           </KotlinVersionInfo>
         </option>

@@ -16,17 +16,17 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
                   val totalStepsCount: Int = 0) : FullStateModel {
 
     private val SKIP_ACTION_PROBABILITY: Double
-    get() {
-        if (flexibleMode) {
-            val range = totalStepsCount - 200
+        get() {
+            if (flexibleMode) {
+                val range = totalStepsCount - 200
 
-            if (step <= range) {
-                return 50 * (0.3 / range) * ((range - step + 1) / 50)
+                if (step <= range) {
+                    return 50 * (0.3 / range) * ((range - step + 1) / 50)
+                }
             }
-        }
 
-        return 0.00
-    }
+            return 0.00
+        }
 
     private val RANDOM_ACTION_PROBABILITY: Double = 0.03
     private val RANDOM_ACTIONS = listOf(
@@ -127,14 +127,15 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
      */
     private fun performAction(agent: BattleAgent, actionName: String, state: BattleState) {
         when (actionName) {
-            BattleAgent.Companion.Action.TURN_LEFT      -> rotate(agent, physicsParameters.agent.rotationAngle)
-            BattleAgent.Companion.Action.TURN_RIGHT     -> rotate(agent, -physicsParameters.agent.rotationAngle)
-            BattleAgent.Companion.Action.GO_FORWARD     -> move(agent, agent.angle, physicsParameters, 1.2)
-            BattleAgent.Companion.Action.GO_BACKWARD    -> move(agent, agent.angle + Math.PI, physicsParameters)
-            BattleAgent.Companion.Action.GO_LEFT        -> move(agent, agent.angle + Math.PI / 2.0, physicsParameters)
-            BattleAgent.Companion.Action.GO_RIGHT       -> move(agent, agent.angle - Math.PI / 2.0, physicsParameters)
-            BattleAgent.Companion.Action.SKIP           -> { /* just skip */ }
-            BattleAgent.Companion.Action.SHOOT          -> shoot(agent, state.getBulletsFor(agent))
+            BattleAgent.Companion.Action.TURN_LEFT -> rotate(agent, physicsParameters.agent.rotationAngle)
+            BattleAgent.Companion.Action.TURN_RIGHT -> rotate(agent, -physicsParameters.agent.rotationAngle)
+            BattleAgent.Companion.Action.GO_FORWARD -> move(agent, agent.angle, physicsParameters, 1.2)
+            BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle + Math.PI, physicsParameters)
+            BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI / 2.0, physicsParameters)
+            BattleAgent.Companion.Action.GO_RIGHT -> move(agent, agent.angle - Math.PI / 2.0, physicsParameters)
+            BattleAgent.Companion.Action.SKIP -> { /* just skip */
+            }
+            BattleAgent.Companion.Action.SHOOT -> shoot(agent, state.getBulletsFor(agent))
             else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
         }
     }
@@ -175,7 +176,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
             return physicsParameters.walls.filter { vector.intersects(it) }.isNotEmpty()
         }
 
-        fun hitsTarget(vector: Line2D, target: Point2D.Double, physicsParameters: BattlePhysicsParameters): Boolean  {
+        fun hitsTarget(vector: Line2D, target: Point2D.Double, physicsParameters: BattlePhysicsParameters): Boolean {
             return vector.ptSegDist(target) <= physicsParameters.bullet.range
         }
     }
@@ -193,7 +194,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
     }
 
     private fun addBullet(bullets: MutableList<BattleBullet>, bullet: BattleBullet) {
-        bullets.removeIf{ it.isEmpty() }
+        bullets.removeAll(bullets.filter { it.isEmpty() })
 
         // TODO: implement replacement strategy
         if (bullets.size == BattleState.BULLETS_COUNT) {
@@ -216,9 +217,9 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
      * @param enemy enemy agent
      */
     private fun processBullets(bullets: MutableList<BattleBullet>, agent: BattleAgent) {
-        bullets.removeIf {
+        bullets.removeAll(bullets.filter {
             if (it.isEmpty()) {
-                return@removeIf true
+                return@filter true
             }
 
             it.speedX += it.accelerationX
@@ -233,18 +234,18 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
 
             if (hitsTarget(trajectory, Point2D.Double(agent.x, agent.y), physicsParameters)) {
                 agent.hp = Math.max(0, agent.hp - it.damage)
-                return@removeIf true
+                return@filter true
             }
 
             if (isOutOfTheWorld(Point2D.Double(it.x, it.y)) || intersectsWall(trajectory, physicsParameters)) {
-                return@removeIf true
+                return@filter true
             }
 
             it.x = trajectory.x2
             it.y = trajectory.y2
 
-            return@removeIf false
-        }
+            return@filter false
+        })
 
         while (bullets.size < BattleState.BULLETS_COUNT) {
             bullets.add(BattleBullet())
