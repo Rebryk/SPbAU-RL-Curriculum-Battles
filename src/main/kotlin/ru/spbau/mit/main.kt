@@ -33,8 +33,8 @@ fun main(args: Array<String>) {
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
             .addObjectVectorizion(BattleBullet.CLASS, NumericVariableFeatures())
 
-    val nTilings = 4
-    val resolution = 10.0
+    val nTilings = 6
+    val resolution = 20.0
 
     val xWidth = generator.physicsParameters.width / resolution
     val yWidth = generator.physicsParameters.height / resolution
@@ -61,21 +61,26 @@ fun main(args: Array<String>) {
     val environment = SimulatedEnvironment(domain, stateGenerator)
 
     // uncomment to run experiment
-    // experiment(environment, BattleAgentFactory(domain, vfa))
+
+    //experiment(environment, BattleAgentFactory(domain, vfa), 100, 1500, "data/hard")
+
+    ((domain.model as FactoredModel).stateModel as BattleModel).flexibleMode = true
+    ((domain.model as FactoredModel).stateModel as BattleModel).totalStepsCount = 1500
+    experiment(environment, BattleAgentFactory(domain, vfa), 100, 1500, "data/flexible3")
 
     // uncomment to use keyboard control
     // setupExplorer(domain, environment, visualizer)
 
-
+    /*
     val observer = VisualActionObserver(visualizer)
     observer.initGUI()
 
     // uncomment to visualize learning
-    // environment.addObservers(observer)
+    environment.addObservers(observer)
 
 
     for (i in 0..2000) {
-        val episode = agent.runLearningEpisode(environment, 1000)
+        val episode = agent.runLearningEpisode(environment, 10000)
 
         val reward = episode.rewardSequence.sum()
         println("$i: steps count = ${episode.maxTimeStep()}, reward = %f".format(reward))
@@ -83,14 +88,19 @@ fun main(args: Array<String>) {
         // call to save episode
         // saveEpisode(episode, i)
 
+        /*
+        if (i == 1500) {
+            environment.addObservers(observer)
+        }*/
+
         environment.resetEnvironment()
     }
 
-    EpisodeSequenceVisualizer(visualizer, domain, "episodes/")
+    EpisodeSequenceVisualizer(visualizer, domain, "episodes/")*/
 }
 
-fun experiment(environment: Environment, factory: LearningAgentFactory) {
-    val exp = LearningAlgorithmExperimenter(environment, 3, 1500, factory)
+fun experiment(environment: Environment, factory: LearningAgentFactory, runsCount: Int, trialLength: Int, folder: String) {
+    val exp = LearningAlgorithmExperimenter(environment, 1, trialLength, factory)
 
     exp.setUpPlottingConfiguration(400, 200, 2, 1000,
             TrialMode.MOST_RECENT_AND_AVERAGE,
@@ -98,8 +108,27 @@ fun experiment(environment: Environment, factory: LearningAgentFactory) {
             PerformanceMetric.STEPS_PER_EPISODE,
             PerformanceMetric.CUMULATIVE_REWARD_PER_EPISODE)
 
+    exp.toggleVisualPlots(true)
+
     exp.startExperiment()
-    exp.writeStepAndEpisodeDataToCSV("expData")
+
+    /*
+    for (run in 1..runsCount) {
+        println("Run $run")
+
+        val exp = LearningAlgorithmExperimenter(environment, 1, trialLength, factory)
+
+        exp.setUpPlottingConfiguration(400, 200, 2, 1000,
+                TrialMode.MOST_RECENT_AND_AVERAGE,
+                PerformanceMetric.AVERAGE_EPISODE_REWARD,
+                PerformanceMetric.STEPS_PER_EPISODE,
+                PerformanceMetric.CUMULATIVE_REWARD_PER_EPISODE)
+
+        exp.toggleVisualPlots(false)
+
+        exp.startExperiment()
+        exp.writeEpisodeDataToCSV("$folder/$run")
+    }*/
 }
 
 fun saveEpisode(episode: Episode, index: Int) {

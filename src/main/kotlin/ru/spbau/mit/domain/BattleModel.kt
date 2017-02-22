@@ -11,22 +11,29 @@ import java.awt.geom.Rectangle2D
 import java.util.*
 
 class BattleModel(val physicsParameters: BattlePhysicsParameters,
-                  val bot: BattleBot,
-                  val flexibleMode: Boolean = false,
-                  val totalStepsCount: Int = 0) : FullStateModel {
+                  val bot: BattleBot) : FullStateModel {
 
     private val SKIP_ACTION_PROBABILITY: Double
     get() {
         if (flexibleMode) {
-            val range = totalStepsCount - 200
+            if (step <= totalStepsCount / 3) {
+                return 0.3
+            } else if (step <= 2 * totalStepsCount / 3) {
+                return 0.15
+            }
+
+            /*val range = totalStepsCount - 200
 
             if (step <= range) {
                 return 50 * (0.3 / range) * ((range - step + 1) / 50)
-            }
+            }*/
         }
 
         return 0.00
     }
+
+    var flexibleMode: Boolean = false
+    var totalStepsCount: Int = 0
 
     private val RANDOM_ACTION_PROBABILITY: Double = 0.03
     private val RANDOM_ACTIONS = listOf(
