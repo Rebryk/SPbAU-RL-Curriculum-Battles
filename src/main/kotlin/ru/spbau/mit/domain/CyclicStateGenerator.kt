@@ -3,7 +3,7 @@ package ru.spbau.mit.domain
 import burlap.mdp.auxiliary.StateGenerator
 import burlap.mdp.core.state.State
 
-class CyclicStateGenerator(private val model: BattleModel) : StateGenerator {
+class CyclicStateGenerator : StateGenerator {
     private val states: MutableList<State> = mutableListOf()
 
     fun addState(state: State): CyclicStateGenerator {
@@ -15,8 +15,6 @@ class CyclicStateGenerator(private val model: BattleModel) : StateGenerator {
         if (states.isEmpty()) {
             throw RuntimeException("CyclicStateGenerator hasn\'t any states!")
         }
-
-        model.nextStep()
 
         val state = states.removeAt(0)
         states.add(state)

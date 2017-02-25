@@ -5,22 +5,20 @@ import burlap.behavior.functionapproximation.dense.NumericVariableFeatures
 import burlap.behavior.functionapproximation.sparse.tilecoding.TileCodingFeatures
 import burlap.behavior.functionapproximation.sparse.tilecoding.TilingArrangement
 import burlap.behavior.singleagent.Episode
-import burlap.behavior.singleagent.auxiliary.EpisodeSequenceVisualizer
-import burlap.behavior.singleagent.learning.tdmethods.vfa.GradientDescentSarsaLam
-import burlap.mdp.singleagent.common.VisualActionObserver
 import burlap.mdp.singleagent.environment.SimulatedEnvironment
 import burlap.mdp.singleagent.oo.OOSADomain
 import burlap.shell.visual.VisualExplorer
 import burlap.visualizer.Visualizer
 import ru.spbau.mit.domain.*
-import ru.spbau.mit.visualization.BattleVisualizer
 import burlap.behavior.singleagent.auxiliary.performance.PerformanceMetric
 import burlap.behavior.singleagent.auxiliary.performance.TrialMode
 import burlap.behavior.singleagent.auxiliary.performance.LearningAlgorithmExperimenter
 import burlap.behavior.singleagent.learning.LearningAgentFactory
 import burlap.mdp.singleagent.environment.Environment
-import burlap.mdp.singleagent.model.FactoredModel
-
+import java.io.File
+import java.io.FileWriter
+import java.nio.file.Files
+import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val generator = BattleDomain()
@@ -33,8 +31,8 @@ fun main(args: Array<String>) {
             .addObjectVectorizion(BattleAgent.CLASS, NumericVariableFeatures())
             .addObjectVectorizion(BattleBullet.CLASS, NumericVariableFeatures())
 
-    val nTilings = 4
-    val resolution = 10.0
+    val nTilings = args[0].toInt()
+    val resolution = args[1].toDouble()
 
     val xWidth = generator.physicsParameters.width / resolution
     val yWidth = generator.physicsParameters.height / resolution
@@ -53,44 +51,101 @@ fun main(args: Array<String>) {
 
     val defaultQ = 0.5
     val vfa = tilecoding.generateVFA(defaultQ / nTilings)
-    val agent = GradientDescentSarsaLam(domain, 0.99, vfa, 0.02, 0.5)
 
-    val visualizer = BattleVisualizer.getVisualizer(generator.physicsParameters)
-
-    val stateGenerator = CyclicStateGenerator((domain.model as FactoredModel).stateModel as BattleModel).addState(initState)
+    val stateGenerator = CyclicStateGenerator().addState(initState)
     val environment = SimulatedEnvironment(domain, stateGenerator)
+    val factory = BattleAgentFactory(domain, vfa)
 
-    // uncomment to run experiment
-    // experiment(environment, BattleAgentFactory(domain, vfa))
-
-    // uncomment to use keyboard control
-    // setupExplorer(domain, environment, visualizer)
-
-
-    val observer = VisualActionObserver(visualizer)
-    observer.initGUI()
-
-    // uncomment to visualize learning
-    // environment.addObservers(observer)
-
-
-    for (i in 0..2000) {
-        val episode = agent.runLearningEpisode(environment, 1000)
-
-        val reward = episode.rewardSequence.sum()
-        println("$i: steps count = ${episode.maxTimeStep()}, reward = %f".format(reward))
-
-        // call to save episode
-        // saveEpisode(episode, i)
-
-        environment.resetEnvironment()
-    }
-
-    EpisodeSequenceVisualizer(visualizer, domain, "episodes/")
+    factory.getModel().setSkipActionProbabilityAlgorithm(BattleModel.HARD_VERSION)
+    runExperiment(environment, factory, "data/hard")
 }
 
-fun experiment(environment: Environment, factory: LearningAgentFactory) {
-    val exp = LearningAlgorithmExperimenter(environment, 3, 1500, factory)
+fun calculateStandardError(values: List<Double>): Double {
+    val average = values.average()
+    val delta = values.map { Math.pow(it - average, 2.0) }.sum()
+
+    return Math.sqrt(delta) / values.size
+}
+
+fun saveStatistics(values: List<List<Double>>, fileName: String) {
+    if (!File(fileName).exists()) {
+        Files.createFile(Paths.get(fileName))
+    }
+
+    val writer = FileWriter(File(fileName))
+    writer.write("Run, Min, Average, Max\n")
+
+    values
+            .map {
+                it.mapIndexed { index, value -> Pair(index, value) }
+            }
+            .flatten()
+            .groupBy { it.first }
+            .forEach {
+                val data = it.value.map { it.second }
+                val average = data.average()
+                val error = calculateStandardError(data)
+                writer.write("${it.key + 1}, ${average - error}, $average, ${average + error}\n")
+            }
+
+    writer.flush()
+}
+
+fun runExperiment(environment: Environment, factory: BattleAgentFactory, folder: String) {
+    val RUNS_COUNT = 20
+
+    val rewards = mutableListOf<List<Double>>()
+    val steps = mutableListOf<List<Double>>()
+
+    (1..RUNS_COUNT).forEach {
+        println("\nExperiment: $it trial")
+        val result = runLearning(environment, factory)
+        rewards.add(result.first)
+        steps.add(result.second)
+    }
+
+    saveStatistics(rewards, "$folder/rewards.csv")
+    saveStatistics(steps, "$folder/step.csv")
+}
+
+fun runLearning(environment: Environment, factory: BattleAgentFactory): Pair<List<Double>, List<Double>> {
+    val RUNS_COUNT = 1500
+    val RANGE = 100
+    val MAX_STEPS = 1000
+
+    val agent = factory.generateAgent()
+    val rewards = mutableListOf<Double>()
+    val steps = mutableListOf<Double>()
+
+    for (i in 1..RUNS_COUNT) {
+        val episode = agent.runLearningEpisode(environment, MAX_STEPS)
+        println("Episode $i: steps = ${episode.numActions()}, reward = ${episode.rewardSequence.sum()}")
+
+        environment.resetEnvironment()
+
+        factory.getModel().nextStep()
+
+        if (i % RANGE == 0) {
+            println("Starting performance evaluating...")
+
+            val skipActionProbabilityAlgorithm = factory.getModel().getSkipActionProbabilityAlgorithm()
+            factory.getModel().setSkipActionProbabilityAlgorithm(BattleModel.HARD_VERSION)
+
+            val performance = agent.evaluatePerformance(environment)
+            rewards.add(performance.reward)
+            steps.add(performance.steps)
+
+            factory.getModel().setSkipActionProbabilityAlgorithm(skipActionProbabilityAlgorithm)
+
+            println("Performance evaluating has finished")
+        }
+    }
+
+    return Pair(rewards, steps)
+}
+
+fun visualExperiment(environment: Environment, factory: LearningAgentFactory, runsCount: Int, trialLength: Int) {
+    val exp = LearningAlgorithmExperimenter(environment, runsCount, trialLength, factory)
 
     exp.setUpPlottingConfiguration(400, 200, 2, 1000,
             TrialMode.MOST_RECENT_AND_AVERAGE,
@@ -99,7 +154,18 @@ fun experiment(environment: Environment, factory: LearningAgentFactory) {
             PerformanceMetric.CUMULATIVE_REWARD_PER_EPISODE)
 
     exp.startExperiment()
-    exp.writeStepAndEpisodeDataToCSV("expData")
+}
+
+
+fun experiment(environment: Environment, factory: LearningAgentFactory, runsCount: Int, trialLength: Int, folder: String) {
+    for (run in 1..runsCount) {
+        println("Run $run")
+
+        val exp = LearningAlgorithmExperimenter(environment, 1, trialLength, factory)
+        exp.toggleVisualPlots(false)
+        exp.startExperiment()
+        exp.writeEpisodeDataToCSV("$folder/$run")
+    }
 }
 
 fun saveEpisode(episode: Episode, index: Int) {

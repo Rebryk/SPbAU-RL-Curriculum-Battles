@@ -11,42 +11,34 @@ import java.awt.geom.Rectangle2D
 import java.util.*
 
 class BattleModel(val physicsParameters: BattlePhysicsParameters,
-                  val bot: BattleBot,
-                  val flexibleMode: Boolean = false,
-                  val totalStepsCount: Int = 0) : FullStateModel {
+                  val bot: BattleBot) : FullStateModel {
 
-    private val SKIP_ACTION_PROBABILITY: Double
-        get() {
-            if (flexibleMode) {
-                val range = totalStepsCount - 200
-
-                if (step <= range) {
-                    return 50 * (0.3 / range) * ((range - step + 1) / 50)
-                }
-            }
-
-            return 0.00
-        }
-
-    private val RANDOM_ACTION_PROBABILITY: Double = 0.03
+    private val RANDOM_ACTION_PROBABILITY: Double = 0.02
     private val RANDOM_ACTIONS = listOf(
             BattleAgent.Companion.Action.GO_FORWARD,
             BattleAgent.Companion.Action.GO_BACKWARD,
             BattleAgent.Companion.Action.GO_LEFT,
             BattleAgent.Companion.Action.GO_RIGHT)
-    private val BOT_ACTION_PROBABILITY = 1.0 - RANDOM_ACTIONS.size * RANDOM_ACTION_PROBABILITY - SKIP_ACTION_PROBABILITY
 
-    private var episode: Int = 0
     private var step: Int = 0
+    private var skipActionProbability: ((Int) -> Double) = HARD_VERSION
 
+    private fun getBotActionProbability(): Double = 1.0 - RANDOM_ACTIONS.size * RANDOM_ACTION_PROBABILITY - skipActionProbability(step)
 
-    fun nextEpisode() {
-        ++episode
-        step = 0
+    fun setSkipActionProbabilityAlgorithm(algorithm: (Int) -> Double) {
+        skipActionProbability = algorithm
+    }
+
+    fun getSkipActionProbabilityAlgorithm(): ((Int) -> Double) {
+        return skipActionProbability
     }
 
     fun nextStep() {
         ++step
+    }
+
+    fun resetStepsCount() {
+        step = 0
     }
 
     // Deterministic variant
@@ -66,8 +58,8 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
         }
 
         val states = mutableListOf(
-                StateTransitionProb(state, SKIP_ACTION_PROBABILITY),
-                StateTransitionProb(sample(state, action, bot.nextAction(state, physicsParameters)), BOT_ACTION_PROBABILITY)
+                StateTransitionProb(state, skipActionProbability(step)),
+                StateTransitionProb(sample(state, action, bot.nextAction(state, physicsParameters)), getBotActionProbability() )
         )
 
         RANDOM_ACTIONS.forEach {
@@ -113,7 +105,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
             return sample(state, action, randomActionName) as BattleState
         }
 
-        if (probability < randomActionProbability + SKIP_ACTION_PROBABILITY) {
+        if (probability < randomActionProbability + skipActionProbability(step)) {
             return sample(state, action, BattleAgent.Companion.Action.SKIP)
         }
 
@@ -133,8 +125,7 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
             BattleAgent.Companion.Action.GO_BACKWARD -> move(agent, agent.angle + Math.PI, physicsParameters)
             BattleAgent.Companion.Action.GO_LEFT -> move(agent, agent.angle + Math.PI / 2.0, physicsParameters)
             BattleAgent.Companion.Action.GO_RIGHT -> move(agent, agent.angle - Math.PI / 2.0, physicsParameters)
-            BattleAgent.Companion.Action.SKIP -> { /* just skip */
-            }
+            BattleAgent.Companion.Action.SKIP -> { /* just skip */ }
             BattleAgent.Companion.Action.SHOOT -> shoot(agent, state.getBulletsFor(agent))
             else -> throw UnsupportedOperationException("Action %s isn't implemented!".format(actionName))
         }
@@ -162,6 +153,8 @@ class BattleModel(val physicsParameters: BattlePhysicsParameters,
     }
 
     companion object {
+        val HARD_VERSION: ((Int) -> Double) = { x -> 0.0 }
+
         fun move(agent: BattleAgent, angle: Double, physicsParameters: BattlePhysicsParameters, coefficient: Double = 1.0) {
             val x = agent.x + Math.cos(angle) * physicsParameters.agent.speed * coefficient
             val y = agent.y + Math.sin(angle) * physicsParameters.agent.speed * coefficient
